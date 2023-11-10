@@ -62,16 +62,29 @@ void on_frame_update(WindowInfo window) {
 
 #include <stdlib.h>
 
+struct Input {
+	double this_frame_time;
+	double last_frame_time;
+};
+typedef struct Input Input;
+
 struct Engine {
+	Input input;
 	UiSprite sprite;
 	Mat4x4f transform;
 };
 typedef struct Engine Engine;
 
-void on_engine_startup(void** user_pointer, Settings settings) {
+static void update_input(Engine* engine, const Settings* settings) {
+	engine->input.this_frame_time = engine->input.last_frame_time;
+	engine->input.this_frame_time = settings->time.seconds;
+}
+
+void on_engine_startup(void** user_pointer, const Settings* settings) {
 	setup_gl_error_callback();
 	Engine* engine = smalloc(sizeof(Engine));
 	*user_pointer = engine;
+	update_input(engine, settings);
 
 	const UiVertices vertices = { {
 		// positions          // texture coords
@@ -80,6 +93,7 @@ void on_engine_startup(void** user_pointer, Settings settings) {
 		{ -0.5f, -0.5f, 0.0f,   0.0f, 0.0f },   // bottom left
 		{ -0.5f,  0.5f, 0.0f,   0.0f, 1.0f },   // top left 
 	} };
+
 	
 	TRY(engine->sprite.prog = load_shader_program("ui_vsh.glsl", "ui_fsh.glsl"));
 	TRY(engine->sprite.vao = create_ui_vao(vertices));
@@ -87,26 +101,29 @@ void on_engine_startup(void** user_pointer, Settings settings) {
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-void on_engine_update(void** user_pointer, Settings settings) {
+void on_engine_update(void** user_pointer, const Settings* settings) {
 	Engine* engine = *user_pointer;
+	update_input(engine, settings);
+
+	double time = engine->input.this_frame_time;
 	engine->transform = mat4x4f_matmul(
 		mat4x4f_matmul(
 			mat4x4f_identity_mat(),
 			mat4x4f_look_at_mat(
-				vec3f_new(0.0f, 0.0f, 1.0f),
+				vec3f_new(sinf(time), 0.0f, cosf(time)),
 				vec3f_zero(),
 				vec3f_up()
 			)
 		),
 		mat4x4f_perspective_mat(
-			(float)settings.window.width / (float)settings.window.height,
+			(float)settings->window.width / (float)settings->window.height,
 			to_radians(85.0f),
 			0.1f,
 			100.0f
 		)
 	);
 
-	glViewport(0, 0, settings.window.width, settings.window.height);
+	glViewport(0, 0, settings->window.width, settings->window.height);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glUseProgram(engine->sprite.prog);
@@ -121,7 +138,7 @@ void on_engine_update(void** user_pointer, Settings settings) {
 	glBindVertexArray(0);
 }
 
-void on_engine_shutdown(void** user_pointer, Settings settings) {
+void on_engine_shutdown(void** user_pointer, const Settings* settings) {
 	free(*user_pointer);
 	*user_pointer = NULL;
 }

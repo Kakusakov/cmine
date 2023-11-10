@@ -42,15 +42,15 @@ void main(void) {
 	Settings settings;
 	void* user_pointer;
 	update_settings(window, &settings);
-	on_engine_startup(&user_pointer, settings);
+	on_engine_startup(&user_pointer, &settings);
 
 	while (!glfwWindowShouldClose(window)) {
 		update_settings(window, &settings);
-		on_engine_update(&user_pointer, settings);
+		on_engine_update(&user_pointer, &settings);
 		glfwSwapBuffers(window);
 	}
 
-	on_engine_shutdown(&user_pointer, settings);
+	on_engine_shutdown(&user_pointer, &settings);
 
 	return 0;
 }

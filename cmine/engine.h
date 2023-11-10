@@ -33,6 +33,6 @@ struct Settings {
 };
 typedef struct Settings Settings;
 
-void on_engine_startup(void** user_pointer, Settings settings);
-void on_engine_update(void** user_pointer, Settings settings);
-void on_engine_shutdown(void** user_pointer, Settings settings);
+void on_engine_startup(void** user_pointer, const Settings* settings);
+void on_engine_update(void** user_pointer, const Settings* settings);
+void on_engine_shutdown(void** user_pointer, const Settings* settings);
