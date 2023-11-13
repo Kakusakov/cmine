@@ -126,7 +126,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -135,22 +135,26 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>opengl32.lib;glfw3.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="app.c" />
     <ClCompile Include="arena.c" />
     <ClCompile Include="chunk.c" />
-    <ClCompile Include="engine.c" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="glfw_error.c" />
     <ClCompile Include="gl_error.c" />
     <ClCompile Include="image.c" />
+    <ClCompile Include="main_menu.c" />
     <ClCompile Include="render.c" />
     <ClCompile Include="sprite.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="safety.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="app.h" />
+    <ClInclude Include="app_run.h" />
     <ClInclude Include="arena.h" />
     <ClInclude Include="engine.h" />
     <ClInclude Include="glad.h" />
@@ -158,6 +162,7 @@
     <ClInclude Include="gl_error.h" />
     <ClInclude Include="image.h" />
     <ClInclude Include="khrplatform.h" />
+    <ClInclude Include="main_menu.h" />
     <ClInclude Include="pack.h" />
     <ClInclude Include="safety.h" />
     <ClInclude Include="render.h" />

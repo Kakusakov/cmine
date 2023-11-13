@@ -1,38 +1,45 @@
 #pragma once
 #include <stdbool.h>
 
-struct ButtonSettings {
+struct KeyInput {
 	bool is_rmb_pressed;
 	bool is_lmb_pressed;
-};
-typedef struct ButtonSettings ButtonSettings;
 
-struct CursorSettings {
+	bool is_w_pressed;
+	bool is_a_pressed;
+	bool is_s_pressed;
+	bool is_d_pressed;
+};
+typedef struct KeyInput KeyInput;
+
+struct CursorInput {
 	bool is_inside_window;
 	double x;
 	double y;
 };
-typedef struct CursorSettings CursorSettings;
+typedef struct CursorInput CursorInput;
 
-struct WindowSettings {
+struct WindowInput {
 	int width;
 	int height;
 };
-typedef struct WindowSettings WindowSettings;
+typedef struct WindowInput WindowInput;
 
-struct TimeSettings {
+struct TimeInput {
 	double seconds;
 };
-typedef struct TimeSettings TimeSettings;
+typedef struct TimeInput TimeInput;
 
-struct Settings {
-	//ButtonSettings button;
-	CursorSettings cursor;
-	WindowSettings window;
-	TimeSettings time;
+struct Input {
+	KeyInput keys;
+	CursorInput cursor;
+	WindowInput window;
+	TimeInput time;
 };
-typedef struct Settings Settings;
+typedef struct Input Input;
 
-void on_engine_startup(void** user_pointer, const Settings* settings);
-void on_engine_update(void** user_pointer, const Settings* settings);
-void on_engine_shutdown(void** user_pointer, const Settings* settings);
+struct Scene {
+	void* self;
+	void (*update)(struct App* app);
+};
+typedef struct Scene Scene;

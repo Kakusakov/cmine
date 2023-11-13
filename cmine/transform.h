@@ -455,9 +455,9 @@ static inline Mat4x4f mat4x4f_look_at_mat(
 }
 
 static inline float to_radians(float degrees) {
-	return degrees * M_PI / 180.0f;
+	return degrees * (float)M_PI / 180.0f;
 }
 
 static inline float to_degrees(float radians) {
-	return radians * 180.0f / M_PI;
+	return radians * 180.0f / (float)M_PI;
 }

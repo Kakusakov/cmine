@@ -21,9 +21,6 @@
     <ClCompile Include="safety.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="engine.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="image.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -46,6 +43,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="glfw_error.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="app.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main_menu.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -84,6 +87,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="glfw_error.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main_menu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="app.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="app_run.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
