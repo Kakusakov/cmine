@@ -147,6 +147,7 @@
     <ClCompile Include="gl_error.c" />
     <ClCompile Include="image.c" />
     <ClCompile Include="main_menu.c" />
+    <ClCompile Include="perlin.c" />
     <ClCompile Include="render.c" />
     <ClCompile Include="sprite.c" />
     <ClCompile Include="main.c" />
@@ -156,6 +157,7 @@
     <ClInclude Include="app.h" />
     <ClInclude Include="app_run.h" />
     <ClInclude Include="arena.h" />
+    <ClInclude Include="chunk.h" />
     <ClInclude Include="engine.h" />
     <ClInclude Include="glad.h" />
     <ClInclude Include="glfw_error.h" />
@@ -163,11 +165,13 @@
     <ClInclude Include="image.h" />
     <ClInclude Include="khrplatform.h" />
     <ClInclude Include="main_menu.h" />
+    <ClInclude Include="mat_math.h" />
     <ClInclude Include="pack.h" />
+    <ClInclude Include="perlin.h" />
+    <ClInclude Include="random.c" />
     <ClInclude Include="safety.h" />
     <ClInclude Include="render.h" />
     <ClInclude Include="sprite.h" />
-    <ClInclude Include="transform.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="bg1.bmp">
@@ -177,6 +181,7 @@
     <Image Include="test2.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="chunk_gsh.glsl" />
     <Text Include="ui_vsh.glsl">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>

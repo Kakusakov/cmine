@@ -51,6 +51,9 @@
     <ClCompile Include="main_menu.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="perlin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine.h">
@@ -80,9 +83,6 @@
     <ClInclude Include="gl_error.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="transform.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="arena.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -96,6 +96,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="app_run.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="perlin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="random.c">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="chunk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mat_math.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -115,6 +127,9 @@
       <Filter>Resource Files</Filter>
     </Text>
     <Text Include="ui_fsh.glsl">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="chunk_gsh.glsl">
       <Filter>Resource Files</Filter>
     </Text>
   </ItemGroup>

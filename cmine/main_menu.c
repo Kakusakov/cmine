@@ -1,10 +1,10 @@
 #include "main_menu.h"
 
-#include "transform.h"
+#include "mat_math.h"
 #include "sprite.h"
 #include "safety.h"
 #include "sprite.h"
-
+#include "render.h"
 
 #include <stdlib.h>
 
@@ -107,7 +107,7 @@ void update_main_menu(App* app) {
 Scene create_main_menu(App* app) {
 	MainMenu* self = smalloc(sizeof(MainMenu));
 	Input input = *app_input(app);
-	self->last_frame_time = input.time.seconds;
+	self->last_frame_time = (float)input.time.seconds;
 
 	const UiVertices vertices = { {
 			// positions          // texture coords
