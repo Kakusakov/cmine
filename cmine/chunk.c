@@ -3,70 +3,80 @@
 
 #include <stdlib.h>
 
-bool block_should_cull_adjacent(const BlockId block) {
-	switch (block) {
+typedef uint_fast8_t BlockSurfaceCullingId;
+
+// Surface never has a texure.
+#define BLOCK_SURFACE_CULLING_ALWAYS ((BlockSurfaceCullingId)0)
+// Surface has a texture only if the adjacent surface doesn't.
+#define BLOCK_SURFACE_CULLING_WEAK ((BlockSurfaceCullingId)1)
+// Surface always has a texture.
+#define BLOCK_SURFACE_CULLING_STRONG ((BlockSurfaceCullingId)2)
+
+#define BLOCK_SURFACE_CULLING_FIRST_ID BLOCK_SURFACE_CULLING_ALWAYS
+#define BLOCK_SURFACE_CULLING_LAST_ID BLOCK_SURFACE_CULLING_STRONG
+
+BlockSurfaceCullingId block_get_block_surface_culling_strategy(const BlockId self)
+{
+	switch (self) {
 	case BLOCK_UNKNOWN:
-		return false;
+		return BLOCK_SURFACE_CULLING_ALWAYS;
 	case BLOCK_AIR:
-		return false;
+		return BLOCK_SURFACE_CULLING_ALWAYS;
 	case BLOCK_STONE:
-		return true;
+		return BLOCK_SURFACE_CULLING_STRONG;
 	}
 	TRY(false);
 }
 
-#define ATLAS_X_LEN 16
-#define ATLAS_Y_LEN 16
-
-static size_t to_block_index(
-	const size_t x,
-	const size_t y,
-	const size_t z)
+bool block_surface_culling_should_cull(
+	const BlockSurfaceCullingId from,
+	const BlockSurfaceCullingId to)
 {
-	return x * CHUNK_SIDELEN * CHUNK_SIDELEN + y * CHUNK_SIDELEN + z;
+	return from <= to;
 }
 
-BlockId* chunk_get_block_at(
-	Chunk* const chunk,
-	const size_t dx,
-	const size_t dy,
-	const size_t dz) 
+static size_t to_block_index(const Vec3s local_pos) {
+	return 
+		local_pos.vs[0] * CHUNK_SIDELEN * CHUNK_SIDELEN +
+		local_pos.vs[1] * CHUNK_SIDELEN +
+		local_pos.vs[2];
+}
+
+BlockId* chunk_block_at(
+	Chunk* const chunk, 
+	const Vec3s local_pos)
 {
-	TRY(dx < CHUNK_SIDELEN);
-	TRY(dy < CHUNK_SIDELEN);
-	TRY(dz < CHUNK_SIDELEN);
+	TRY(local_pos.vs[0] < CHUNK_SIDELEN);
+	TRY(local_pos.vs[1] < CHUNK_SIDELEN);
+	TRY(local_pos.vs[2] < CHUNK_SIDELEN);
 
-	const size_t index = to_block_index(dx, dy, dz);
-
+	const size_t index = to_block_index(local_pos);
 	return &chunk->blocks[index];
 }
 
 static size_t to_chunk_index(
-	const size_t dx, 
-	const size_t dy, 
-	const size_t dz, 
+	const Vec3s area_internal_pos,
 	const size_t sidelen) 
 {
-	return dx * sidelen * sidelen + dy * sidelen + dz;
+	return 
+		area_internal_pos.vs[0] * sidelen * sidelen +
+		area_internal_pos.vs[1] * sidelen +
+		area_internal_pos.vs[2];
 }
 
 Chunk* chunk_area_get_chunk_at(
 	ChunkArea* const area,
-	const int32_t chunk_x,
-	const int32_t chunk_y,
-	const int32_t chunk_z) 
+	const Vec3i32 chunk_pos)
 {
-	TRY(chunk_x < area->x_anchor);
-	TRY(chunk_y < area->y_anchor);
-	TRY(chunk_z < area->z_anchor);
-	TRY(chunk_x >= area->x_anchor + area->sidelen);
-	TRY(chunk_y >= area->y_anchor + area->sidelen);
-	TRY(chunk_z >= area->z_anchor + area->sidelen);
+	TRY(vec3i32_exact_veclt(chunk_pos, area->anchor_pos));
+	TRY(!vec3i32_exact_veclt(
+		chunk_pos,
+		vec3i32_add(area->anchor_pos, (int32_t)area->sidelen)));
 
 	const size_t index = to_chunk_index(
-		((size_t)(chunk_x - area->x_anchor) + area->x_offset) % area->sidelen,
-		((size_t)(chunk_x - area->x_anchor) + area->x_offset) % area->sidelen,
-		((size_t)(chunk_x - area->x_anchor) + area->x_offset) % area->sidelen,
+		vec3s_rem(
+			vec3s_from_vec3i32(vec3i32_vecsub(chunk_pos, area->anchor_pos)),
+			area->sidelen),
 		area->sidelen);
 
 	return &area->chunks[index];
@@ -75,22 +85,18 @@ Chunk* chunk_area_get_chunk_at(
 void chunk_generate_blocks(
 	const WorldGenerationSettings* const settings,
 	Chunk* const chunk,
-	const int32_t chunk_x,
-	const int32_t chunk_y,
-	const int32_t chunk_z)
+	const Vec3i32 chunk_pos)
 {
-	for (int32_t dx = 0; dx < CHUNK_SIDELEN; dx++) {
-		const int32_t x = chunk_x + dx;
-		for (int32_t dz = 0; dz < CHUNK_SIDELEN; dz++) {
-			const int32_t z = chunk_z + dz;
+	for (Vec3s local_pos = vec3s_zero(); local_pos.vs[0] < CHUNK_SIDELEN; local_pos.vs[0]++) {
+		for (local_pos.vs[2] = 0; local_pos.vs[2] < CHUNK_SIDELEN; local_pos.vs[2]++) {
 			const int32_t height = (int32_t)fbm2(
 				&settings->perlin_seed,
 				&settings->heightmap_fbm,
-				(float)x,
-				(float)z);
-			for (int32_t dy = 0; dy < CHUNK_SIDELEN; dy++) {
-				const int32_t y = chunk_y + dy;
-				BlockId* const block = chunk_get_block_at(chunk, dx, dy, dz);
+				(float)local_pos.vs[0],
+				(float)local_pos.vs[2]);
+			for (local_pos.vs[1] = 0; local_pos.vs[1] < CHUNK_SIDELEN; local_pos.vs[1]++) {
+				const int32_t y = chunk_pos.vs[1] * CHUNK_SIDELEN + (int32_t)local_pos.vs[1];
+				BlockId* const block = chunk_block_at(chunk, local_pos);
 				*block = y > height ? BLOCK_AIR : BLOCK_STONE;
 			}
 		}
@@ -106,31 +112,59 @@ typedef uint_fast8_t BlockSurfaceId;
 #define BLOCK_SURFACE_FRONT ((BlockSurfaceId)4)
 #define BLOCK_SURFACE_BACK ((BlockSurfaceId)5)
 
-#define BLOCK_SURFACE_FIRST_ID ((BlockSurfaceId)0)
-#define BLOCK_SURFACE_LAST_ID ((BlockSurfaceId)5)
+#define BLOCK_SURFACE_FIRST_ID BLOCK_SURFACE_RIGHT
+#define BLOCK_SURFACE_LAST_ID BLOCK_SURFACE_BACK
+
+Vec3i32 block_surface_get_normal(const BlockSurfaceId surface) {
+	Vec3i32 ret = vec3i32_zero();
+	switch (surface) {
+	case BLOCK_SURFACE_RIGHT:
+		*vec3i32_at(&ret, 0) = 1;
+		return ret;
+	case BLOCK_SURFACE_LEFT:
+		*vec3i32_at(&ret, 0) = -1;
+		return ret;
+	case BLOCK_SURFACE_TOP:
+		*vec3i32_at(&ret, 1) = 1;
+		return ret;
+	case BLOCK_SURFACE_BOTTOM:
+		*vec3i32_at(&ret, 1) = -1;
+		return ret;
+	case BLOCK_SURFACE_FRONT:
+		*vec3i32_at(&ret, 2) = 1;
+		return ret;
+	case BLOCK_SURFACE_BACK:
+		*vec3i32_at(&ret, 2) = -1;
+		return ret;
+	}
+	TRY(false);
+}
+
+Vec2s block_get_surface_texture_atlas_pos(
+	const BlockId block, 
+	const BlockSurfaceId surface) 
+{
+	// TODO: Assign the textures to blocks.
+	return vec2s_zero();
+}
 
 typedef uint32_t BlockFaceVertex;
 
 BlockFaceVertex create_block_face_vertex(
-	const size_t dx,
-	const size_t dy,
-	const size_t dz,
+	const Vec3s local_pos,
 	const BlockSurfaceId surface_id,
-	const size_t uv_x,
-	const size_t uv_y)
+	const Vec2s atlas_pos)
 {
-	TRY(dx < CHUNK_SIDELEN);
-	TRY(dy < CHUNK_SIDELEN);
-	TRY(dz < CHUNK_SIDELEN);
+	TRY(vec3s_exact_veclt(local_pos, vec3s_splat(CHUNK_SIDELEN)));
 	TRY(surface_id >= BLOCK_SURFACE_FIRST_ID &&
 		surface_id <= BLOCK_SURFACE_LAST_ID);
-	TRY(uv_x < ATLAS_X_LEN);
-	TRY(uv_y < ATLAS_Y_LEN);
+	TRY(atlas_pos.vs[0] < ATLAS_X_LEN);
+	TRY(atlas_pos.vs[1] < ATLAS_Y_LEN);
 
 	return
-		((uint32_t)dx) |
-		(((uint32_t)dy) << 3) |
-		(((uint32_t)dz) << 6) |
+		((uint32_t)local_pos.vs[0]) |
+		(((uint32_t)local_pos.vs[1]) << 3) |
+		(((uint32_t)local_pos.vs[2]) << 6) |
 		(((uint32_t)(
 			(surface_id == BLOCK_SURFACE_RIGHT) |
 			(surface_id == BLOCK_SURFACE_TOP) |
@@ -144,24 +178,50 @@ BlockFaceVertex create_block_face_vertex(
 		(((uint32_t)(
 			(surface_id == BLOCK_SURFACE_FRONT) |
 			(surface_id == BLOCK_SURFACE_BACK))) << 12) |
-		(((uint32_t)uv_x) << 13) |
-		(((uint32_t)uv_y) << 17);
+		(((uint32_t)atlas_pos.vs[0]) << 13) |
+		(((uint32_t)atlas_pos.vs[1]) << 17);
 }
 
 void chunk_area_generate_chunk_mesh(
 	ChunkArea* const area,
-	const int32_t chunk_x,
-	const int32_t chunk_y,
-	const int32_t chunk_z)
+	const Vec3i32 chunk_pos)
 {
-	Chunk* const chunk = chunk_area_get_chunk_at(area, chunk_x, chunk_y, chunk_z);
+	Chunk* const chunk = chunk_area_get_chunk_at(area, chunk_pos);
 	BlockFaceVertex* vertices = NULL;
-	for (size_t dx = 0; dx < CHUNK_SIDELEN; dx++) {
-		for (size_t dz = 0; dz < CHUNK_SIDELEN; dz++) {
-			for (size_t dy = 0; dy < CHUNK_SIDELEN; dy++) {
-				const BlockId block = *chunk_get_block_at(chunk, dx, dy, dz);
-
+	size_t vertices_count = 0;
+	size_t vertices_capacity = 0;
+	for (Vec3s local_pos = vec3s_zero(); local_pos.vs[0] < CHUNK_SIDELEN; local_pos.vs[0]++) {
+		for (local_pos.vs[1] = 0; local_pos.vs[1] < CHUNK_SIDELEN; local_pos.vs[1]++) {
+			for (local_pos.vs[2] = 0; local_pos.vs[2] < CHUNK_SIDELEN; local_pos.vs[2]++) {
+				const BlockId block = *chunk_block_at(chunk, local_pos);
+				const BlockSurfaceCullingId from = 
+					block_get_block_surface_culling_strategy(block);
+				for (BlockSurfaceId surface = BLOCK_SURFACE_FIRST_ID;
+					surface < BLOCK_SURFACE_LAST_ID;
+					surface++)
+				{
+					const Vec3s adjacent_pos = vec3s_vecadd(
+						local_pos,
+						vec3s_from_vec3i32(block_surface_get_normal(surface)));
+					if (vec3s_exact_veclt(adjacent_pos, vec3s_splat(CHUNK_SIDELEN)))
+					{
+						const BlockId adjacent_block = *chunk_block_at(chunk, adjacent_pos);
+						const BlockSurfaceCullingId to = 
+							block_get_block_surface_culling_strategy(adjacent_block);
+						if (block_surface_culling_should_cull(from, to)) continue;
+					}
+					if (!(vertices_count < vertices_capacity)) {
+						vertices_capacity = vertices_capacity ? vertices_capacity * 2 : 1;
+						vertices = srealloc(vertices, vertices_capacity * sizeof(BlockFaceVertex));
+					}
+					vertices[vertices_count] = create_block_face_vertex(
+						local_pos, 
+						surface, 
+						block_get_surface_texture_atlas_pos(block, surface));
+				}
 			}
 		}
 	}
+	// TODO: Load the vertices into VBO, update the chunk's VAO.
+	free(vertices);
 }

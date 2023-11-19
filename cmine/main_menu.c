@@ -1,6 +1,6 @@
 #include "main_menu.h"
 
-#include "mat_math.h"
+#include "vec_math.h"
 #include "sprite.h"
 #include "safety.h"
 #include "sprite.h"

@@ -107,7 +107,10 @@
     <ClInclude Include="chunk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="mat_math.h">
+    <ClInclude Include="vec_math.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="unreachable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -140,5 +143,6 @@
     <None Include="chunk_vsh.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>

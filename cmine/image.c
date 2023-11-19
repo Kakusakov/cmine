@@ -210,7 +210,7 @@ static bool store_bmp_to_file(FILE* file, const BmpImage* image) {
 	if (UINT32_MAX - pixel_array_offset < image_size) return false;
 	const uint32_t file_size = pixel_array_offset + image_size;
 	const BmpFileHeader fh = {
-		.signature = bmp_signature,
+		.signature = { bmp_signature[0], bmp_signature[0] },
 		.reserved = { 0, 0 },
 		.pixel_data_offset = pixel_array_offset,
 		.size = file_size
