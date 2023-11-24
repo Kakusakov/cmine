@@ -1,10 +1,15 @@
 #pragma once
-#include "engine.h"
+#include "arena.h"
+#include "input.h"
 
 typedef struct App App;
 
-void app_update(App* app);
+App* app_init(Arena* const arena);
+void app_deinit(App* const app);
 
-bool app_should_close(App* app);
-const Input* app_input(App* app);
-Scene* app_active_scene(App* app);
+void* app_get_gl_loader(App* const app);
+void app_bind_current_context(App* const app);
+void app_unbind_current_context(void);
+void app_update(App* const app);
+bool app_should_close(const App* const app);
+Input app_input(const App* const app);

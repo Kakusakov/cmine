@@ -1,5 +1,6 @@
 #pragma once
 #include "pack.h"
+#include "glad.h"
 #include "safety.h"
 
 #define _USE_MATH_DEFINES
@@ -10,18 +11,18 @@
 #include <stddef.h>
 
 static inline bool f_aprox_eq(
-	const float_t v1, 
-	const float_t v2) 
+	const GLfloat v1, 
+	const GLfloat v2) 
 {
 	return fabs(((double)v1) - ((double)v2)) < DBL_EPSILON;
 }
 
-static inline float_t to_radians(const float_t degrees) {
-	return degrees * (float_t)M_PI / (float_t)180.0;
+static inline GLfloat to_radians(const GLfloat degrees) {
+	return degrees * (GLfloat)M_PI / (GLfloat)180.0;
 }
 
-static inline float_t to_degrees(const float_t radians) {
-	return radians * (float_t)180.0 / (float_t)M_PI;
+static inline GLfloat to_degrees(const GLfloat radians) {
+	return radians * (GLfloat)180.0 / (GLfloat)M_PI;
 }
 
 #define IMPLEMENT_VEC_STRUCT(struct_name, name, type, size, zero, one)\
@@ -180,39 +181,6 @@ static inline struct_name2 name2##_from_##name1(const struct_name1 vec) {\
 	return ret;\
 }
 
-/*#define VEC_OUTER_FOR(struct_name, iter_name, begin, end, expr)\
-{\
-	const struct_name __for_##iter_name##_begin = begin;\
-	const struct_name __for_##iter_name##_end = end;\
-	struct_name iter_name;
-	expr\
-}
-
-#define VEC_INNER_FOR(iter_name, index)\
-for (iter_name##.vs[index] = __for_##iter_name##_begin##.vs[index];\
-	iter_name##.vs[index] < __for_##iter_name##_end##.vs[index];\
-	iter_name##.vs[index]++)
-
-// Fuck custom for loops, this is way too much voodoo.
-VEC_OUTER_FOR(Vec3i32, local_position, vec3i32_zero(), vec3i32_splat(CHUNK_SIDELEN),
-VEC_INNER_FOR(local_position, 0) {
-	const int32_t x = chunk_position.vs[0] + local_position.vs[0];
-	VEC_INNER_FOR(local_position, 2) {
-		const int32_t z = chunk_position.vs[2] + local_position.vs[2];
-		const int32_t height = (int32_t)fbm2(
-			&settings->perlin_seed,
-			&settings->heightmap_fbm,
-			(float)x,
-			(float)z);
-		VEC_INNER_FOR(local_position, 1) {
-			const int32_t y = chunk_y + dy;
-			BlockId* const block = chunk_block_at(chunk, local_position);
-			*block = y > height ? BLOCK_AIR : BLOCK_STONE;
-		}
-	}
-}
-)*/
-
 #define IMPLEMENT_FLOAT_VEC_STRUCT(struct_name, name, type, size, zero, one, sqrt_fn)\
 IMPLEMENT_VEC_STRUCT(struct_name, name, type, size, zero, one)\
 IMPLEMENT_FLOAT_VEC_EXTENSION(struct_name, name, type, size, zero, sqrt_fn)
@@ -222,9 +190,9 @@ IMPLEMENT_VEC_STRUCT(struct_name, name, type, size, zero, one)\
 IMPLEMENT_INT_VEC_EXTENSION(struct_name, name, type, size)
 
 
-IMPLEMENT_FLOAT_VEC_STRUCT(Vec2f, vec2f, float_t, 2, 0.0f, 1.0f, sqrtf);
-IMPLEMENT_FLOAT_VEC_STRUCT(Vec3f, vec3f, float_t, 3, 0.0f, 1.0f, sqrtf);
-IMPLEMENT_FLOAT_VEC_STRUCT(Vec4f, vec4f, float_t, 4, 0.0f, 1.0f, sqrtf);
+IMPLEMENT_FLOAT_VEC_STRUCT(Vec2f, vec2f, GLfloat, 2, 0.0f, 1.0f, sqrtf);
+IMPLEMENT_FLOAT_VEC_STRUCT(Vec3f, vec3f, GLfloat, 3, 0.0f, 1.0f, sqrtf);
+IMPLEMENT_FLOAT_VEC_STRUCT(Vec4f, vec4f, GLfloat, 4, 0.0f, 1.0f, sqrtf);
 
 IMPLEMENT_INT_VEC_STRUCT(Vec2s, vec2s, size_t, 2, 0, 1);
 IMPLEMENT_INT_VEC_STRUCT(Vec3s, vec3s, size_t, 3, 0, 1);
@@ -232,22 +200,23 @@ IMPLEMENT_INT_VEC_STRUCT(Vec3s, vec3s, size_t, 3, 0, 1);
 IMPLEMENT_INT_VEC_STRUCT(Vec2i32, vec2i32, int32_t, 2, 0, 1);
 IMPLEMENT_INT_VEC_STRUCT(Vec3i32, vec3i32, int32_t, 3, 0, 1);
 
-IMPLEMENT_FLOAT_VEC_STRUCT(Mat4x4f, mat4x4f, float_t, 16, 0, 1, sqrtf);
+IMPLEMENT_FLOAT_VEC_STRUCT(Mat4x4f, mat4x4f, GLfloat, 16, 0, 1, sqrtf);
 
-IMPLEMENT_VEC_CONVERSION(Vec2f, Vec2s, vec2f, vec2s, float_t, size_t, 2);
-IMPLEMENT_VEC_CONVERSION(Vec3f, Vec3s, vec3f, vec3s, float_t, size_t, 3);
+IMPLEMENT_VEC_CONVERSION(Vec2f, Vec2s, vec2f, vec2s, GLfloat, size_t, 2);
+IMPLEMENT_VEC_CONVERSION(Vec3f, Vec3s, vec3f, vec3s, GLfloat, size_t, 3);
 
-IMPLEMENT_VEC_CONVERSION(Vec2f, Vec2i32, vec2f, vec2i32, float_t, int32_t, 2);
-IMPLEMENT_VEC_CONVERSION(Vec3f, Vec3i32, vec3f, vec3i32, float_t, int32_t, 3);
+IMPLEMENT_VEC_CONVERSION(Vec2f, Vec2i32, vec2f, vec2i32, GLfloat, int32_t, 2);
+IMPLEMENT_VEC_CONVERSION(Vec3f, Vec3i32, vec3f, vec3i32, GLfloat, int32_t, 3);
 
 IMPLEMENT_VEC_CONVERSION(Vec2s, Vec2i32, vec2s, vec2i32, size_t, int32_t, 2);
 IMPLEMENT_VEC_CONVERSION(Vec3s, Vec3i32, vec3s, vec3i32, size_t, int32_t, 3);
 
+// TODO: this should use _Generic.
 
 static inline Vec3f vec3f_new(
-	const float_t x, 
-	const float_t y, 
-	const float_t z)
+	const GLfloat x, 
+	const GLfloat y, 
+	const GLfloat z)
 {
 	Vec3f vec;
 	vec.vs[0] = x;
@@ -283,10 +252,10 @@ static inline Vec3f vec3f_cross(const Vec3f a, const Vec3f b) {
 }
 
 static inline Vec4f vec4f_new(
-	const float_t x, 
-	const float_t y, 
-	const float_t z, 
-	const float_t w)
+	const GLfloat x, 
+	const GLfloat y, 
+	const GLfloat z, 
+	const GLfloat w)
 {
 	Vec4f vec;
 	vec.vs[0] = x;
@@ -329,7 +298,7 @@ static inline Vec3f vec4f_plane_intersect_line(
 					dir)));
 }
 
-static inline float_t mat4x4f_get_element(
+static inline GLfloat mat4x4f_get_element(
 	const Mat4x4f mat, 
 	const size_t row, 
 	const size_t col) 
@@ -374,23 +343,23 @@ static inline Mat4x4f mat4x4f_matmul(const Mat4x4f mat1, const Mat4x4f mat2) {
 
 	// Actually it should be this...
 	/*mat.vs[0] = vec4f_dot(mat4x4f_get_row(mat1, 0), mat4x4f_get_col(mat2, 0));
-	mat.vs[1] = vec4f_dot(mat4x4f_get_row(mat1, 0), mat4x4f_get_col(mat2, 0));
-	mat.vs[2] = vec4f_dot(mat4x4f_get_row(mat1, 0), mat4x4f_get_col(mat2, 0));
-	mat.vs[3] = vec4f_dot(mat4x4f_get_row(mat1, 0), mat4x4f_get_col(mat2, 0));
+	mat.vs[1] = vec4f_dot(mat4x4f_get_row(mat1, 0), mat4x4f_get_col(mat2, 1));
+	mat.vs[2] = vec4f_dot(mat4x4f_get_row(mat1, 0), mat4x4f_get_col(mat2, 2));
+	mat.vs[3] = vec4f_dot(mat4x4f_get_row(mat1, 0), mat4x4f_get_col(mat2, 3));
 
-	mat.vs[4] = vec4f_dot(mat4x4f_get_row(mat1, 1), mat4x4f_get_col(mat2, 1));
+	mat.vs[4] = vec4f_dot(mat4x4f_get_row(mat1, 1), mat4x4f_get_col(mat2, 0));
 	mat.vs[5] = vec4f_dot(mat4x4f_get_row(mat1, 1), mat4x4f_get_col(mat2, 1));
-	mat.vs[6] = vec4f_dot(mat4x4f_get_row(mat1, 1), mat4x4f_get_col(mat2, 1));
-	mat.vs[7] = vec4f_dot(mat4x4f_get_row(mat1, 1), mat4x4f_get_col(mat2, 1));
+	mat.vs[6] = vec4f_dot(mat4x4f_get_row(mat1, 1), mat4x4f_get_col(mat2, 2));
+	mat.vs[7] = vec4f_dot(mat4x4f_get_row(mat1, 1), mat4x4f_get_col(mat2, 3));
 
-	mat.vs[8] = vec4f_dot(mat4x4f_get_row(mat1, 2), mat4x4f_get_col(mat2, 2));
-	mat.vs[9] = vec4f_dot(mat4x4f_get_row(mat1, 2), mat4x4f_get_col(mat2, 2));
+	mat.vs[8] = vec4f_dot(mat4x4f_get_row(mat1, 2), mat4x4f_get_col(mat2, 0));
+	mat.vs[9] = vec4f_dot(mat4x4f_get_row(mat1, 2), mat4x4f_get_col(mat2, 1));
 	mat.vs[10] = vec4f_dot(mat4x4f_get_row(mat1, 2), mat4x4f_get_col(mat2, 2));
-	mat.vs[11] = vec4f_dot(mat4x4f_get_row(mat1, 2), mat4x4f_get_col(mat2, 2));
+	mat.vs[11] = vec4f_dot(mat4x4f_get_row(mat1, 2), mat4x4f_get_col(mat2, 3));
 
-	mat.vs[12] = vec4f_dot(mat4x4f_get_row(mat1, 3), mat4x4f_get_col(mat2, 3));
-	mat.vs[13] = vec4f_dot(mat4x4f_get_row(mat1, 3), mat4x4f_get_col(mat2, 3));
-	mat.vs[14] = vec4f_dot(mat4x4f_get_row(mat1, 3), mat4x4f_get_col(mat2, 3));
+	mat.vs[12] = vec4f_dot(mat4x4f_get_row(mat1, 3), mat4x4f_get_col(mat2, 0));
+	mat.vs[13] = vec4f_dot(mat4x4f_get_row(mat1, 3), mat4x4f_get_col(mat2, 1));
+	mat.vs[14] = vec4f_dot(mat4x4f_get_row(mat1, 3), mat4x4f_get_col(mat2, 2));
 	mat.vs[15] = vec4f_dot(mat4x4f_get_row(mat1, 3), mat4x4f_get_col(mat2, 3));*/
 
 	mat.vs[0] = vec4f_dot(mat4x4f_get_row(mat1, 0), mat4x4f_get_row(mat2, 0));
@@ -442,7 +411,7 @@ static inline Mat4x4f mat4x4f_diagonal_mat(const Vec4f value) {
 	return mat;
 }
 
-static inline Mat4x4f mat4x4f_scalar_mat(const float_t value) {
+static inline Mat4x4f mat4x4f_scalar_mat(const GLfloat value) {
 	return mat4x4f_diagonal_mat(vec4f_new(value, value, value, value));
 }
 
@@ -506,10 +475,10 @@ static inline Mat4x4f mat4x4f_scale_mat(const Vec3f scale) {
 	return mat;
 }
 
-static inline Mat4x4f mat4x4f_rotate_axis_x_mat(const float_t radians) {
+static inline Mat4x4f mat4x4f_rotate_axis_x_mat(const GLfloat radians) {
 	Mat4x4f mat;
-	const float_t c = cosf(radians);
-	const float_t s = sinf(radians);
+	const GLfloat c = cosf(radians);
+	const GLfloat s = sinf(radians);
 
 	mat.vs[0] = 1.0f;
 	mat.vs[1] = 0.0f;
@@ -534,10 +503,10 @@ static inline Mat4x4f mat4x4f_rotate_axis_x_mat(const float_t radians) {
 	return mat;
 }
 
-static inline Mat4x4f mat4x4f_rotate_axis_y(const float_t radians) {
+static inline Mat4x4f mat4x4f_rotate_axis_y(const GLfloat radians) {
 	Mat4x4f mat;
-	const float_t c = cosf(radians);
-	const float_t s = sinf(radians);
+	const GLfloat c = cosf(radians);
+	const GLfloat s = sinf(radians);
 
 	mat.vs[0] = c;
 	mat.vs[1] = 0.0f;
@@ -562,10 +531,10 @@ static inline Mat4x4f mat4x4f_rotate_axis_y(const float_t radians) {
 	return mat;
 }
 
-static inline Mat4x4f mat4x4f_rotate_axis_z(const float_t radians) {
+static inline Mat4x4f mat4x4f_rotate_axis_z(const GLfloat radians) {
 	Mat4x4f mat;
-	const float_t c = cosf(radians);
-	const float_t s = sinf(radians);
+	const GLfloat c = cosf(radians);
+	const GLfloat s = sinf(radians);
 
 	mat.vs[0] = c;
 	mat.vs[1] = -s;
@@ -591,12 +560,12 @@ static inline Mat4x4f mat4x4f_rotate_axis_z(const float_t radians) {
 }
 
 static inline Mat4x4f mat4x4f_ortho_mat(
-	const float_t left,
-	const float_t right,
-	const float_t bottom,
-	const float_t top,
-	const float_t near,
-	const float_t far) 
+	const GLfloat left,
+	const GLfloat right,
+	const GLfloat bottom,
+	const GLfloat top,
+	const GLfloat near,
+	const GLfloat far) 
 {
 	Mat4x4f mat;
 
@@ -624,13 +593,13 @@ static inline Mat4x4f mat4x4f_ortho_mat(
 }
 
 static inline Mat4x4f mat4x4f_perspective_mat(
-	const float_t aspect,
-	const float_t fov_y,
-	const float_t near,
-	const float_t far) 
+	const GLfloat aspect,
+	const GLfloat fov_y,
+	const GLfloat near,
+	const GLfloat far) 
 {
 	Mat4x4f mat;
-	const float_t f = 1.0f / tanf(fov_y / 2.0f);
+	const GLfloat f = 1.0f / tanf(fov_y / 2.0f);
 
 	mat.vs[0] = f / aspect;
 	mat.vs[1] = 0.0f;

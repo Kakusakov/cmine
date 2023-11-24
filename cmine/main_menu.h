@@ -1,5 +1,4 @@
 #pragma once
 #include "app.h"
-#include "engine.h"
 
-Scene create_main_menu(App* app);
+void main_menu_run(void);

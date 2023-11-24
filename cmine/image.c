@@ -183,9 +183,9 @@ static bool store_bmp_to_file(FILE* file, const BmpImage* image) {
 			(size_t)UINT32_MAX < image->pixel_size
 		)
 	) return false;
-	const uint32_t width = image->width;
-	const uint32_t height = image->height;
-	const uint32_t byte_count = image->pixel_size;
+	const uint32_t width = (uint32_t)image->width;
+	const uint32_t height = (uint32_t)image->height;
+	const uint32_t byte_count = (uint32_t)image->pixel_size;
 
 	if (UINT32_MAX / width / height < byte_count) return false;
 	const uint32_t line_padding_size = (4 - ((width * byte_count) % 4)) % 4;

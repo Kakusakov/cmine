@@ -1,46 +1,42 @@
 #pragma once
 #include <stdint.h>
+#include "glad.h"
+#include "vec_math.h"
 
+typedef struct PerlinSeed PerlinSeed;
 struct PerlinSeed {
 	uint8_t p[512];
 };
-typedef struct PerlinSeed PerlinSeed;
 
 void perlin_init_from_stdrand(
 	PerlinSeed* seed, 
 	unsigned rand_seed
 );
-float perlin3(
-	const PerlinSeed* seed, 
-	float x, 
-	float y, 
-	float z
+GLfloat perlin3(
+	const PerlinSeed* seed,
+	const Vec3f pos
 );
-float perlin2(
+GLfloat perlin2(
 	const PerlinSeed* seed, 
-	float x, 
-	float y
+	const Vec2f pos
 );
 
 struct FBMSettings {
 	uint8_t octave_count;
-	float frequency;
-	float intensity;
-	float lacunarity;
-	float persistance;
+	GLfloat frequency;
+	GLfloat intensity;
+	GLfloat lacunarity;
+	GLfloat persistance;
 };
 typedef struct FBMSettings FBMSettings;
 
-float fbm3(
+GLfloat fbm3(
 	const PerlinSeed* seed,
 	const FBMSettings* settings,
-	float x,
-	float y,
-	float z
+	const Vec3f pos
 );
-float fbm2(
+GLfloat fbm2(
 	const PerlinSeed* seed,
 	const FBMSettings* settings,
-	float x,
-	float y
+	const Vec2f pos
 );

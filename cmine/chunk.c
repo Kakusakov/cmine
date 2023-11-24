@@ -89,7 +89,7 @@ void chunk_generate_blocks(
 {
 	for (Vec3s local_pos = vec3s_zero(); local_pos.vs[0] < CHUNK_SIDELEN; local_pos.vs[0]++) {
 		for (local_pos.vs[2] = 0; local_pos.vs[2] < CHUNK_SIDELEN; local_pos.vs[2]++) {
-			const int32_t height = (int32_t)fbm2(
+			/*const int32_t height = (int32_t)fbm2(
 				&settings->perlin_seed,
 				&settings->heightmap_fbm,
 				(float)local_pos.vs[0],
@@ -98,7 +98,7 @@ void chunk_generate_blocks(
 				const int32_t y = chunk_pos.vs[1] * CHUNK_SIDELEN + (int32_t)local_pos.vs[1];
 				BlockId* const block = chunk_block_at(chunk, local_pos);
 				*block = y > height ? BLOCK_AIR : BLOCK_STONE;
-			}
+			}*/
 		}
 	}
 }

@@ -1,6 +1,6 @@
-#include "app_run.h"
+#include "main_menu.h"
 
 int main(void) {
-	app_run();
+	main_menu_run();
 	return 0;
 }

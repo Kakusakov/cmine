@@ -42,9 +42,6 @@
     <ClCompile Include="arena.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="glfw_error.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="app.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -56,9 +53,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="engine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -86,16 +80,10 @@
     <ClInclude Include="arena.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="glfw_error.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="main_menu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="app.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="app_run.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="perlin.h">
@@ -111,6 +99,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="unreachable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
