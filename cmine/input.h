@@ -1,5 +1,5 @@
 #pragma once
-#include <stdbool.h>
+#include "fixed_types.h"
 
 typedef struct KeyInput KeyInput;
 struct KeyInput {
@@ -15,19 +15,19 @@ struct KeyInput {
 typedef struct CursorInput CursorInput;
 struct CursorInput {
 	bool is_inside_window;
-	double x;
-	double y;
+	float64_t x;
+	float64_t y;
 };
 
 typedef struct WindowInput WindowInput;
 struct WindowInput {
-	int width;
-	int height;
+	int32_t width;
+	int32_t height;
 };
 
 typedef struct TimeInput TimeInput;
 struct TimeInput {
-	double seconds;
+	float64_t seconds;
 };
 
 typedef struct Input Input;

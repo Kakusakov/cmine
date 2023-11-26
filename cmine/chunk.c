@@ -1,7 +1,9 @@
 #include "chunk.h"
 #include "safety.h"
+#include "vec_math.h"
 
 #include <stdlib.h>
+
 
 typedef uint_fast8_t BlockSurfaceCullingId;
 

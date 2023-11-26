@@ -16,13 +16,13 @@ struct Region {
 };
 
 static Region* region_init(const size_t least_capacity) {
-	static const size_t minimal_region_capacity = 8 * 1024 / sizeof(uint8_t);
+	static const size_t minimal_region_capacity = 8 * 1024;
 
 	const size_t capacity = least_capacity < minimal_region_capacity ? 
 		minimal_region_capacity : 
 		least_capacity;
 
-	Region* const region = smalloc(sizeof(Region) + capacity * sizeof(uint8_t));
+	Region* const region = smalloc(sizeof(Region) + capacity);
 	region->next = NULL;
 	region->size = 0;
 	region->capacity = capacity;
@@ -50,7 +50,9 @@ static void* region_try_alloc(
 {
 	try(alignment != 0);
 	const size_t padding = region->size % alignment;
-	try(SIZE_MAX - padding >= size);
+	if (SIZE_MAX - padding >= size) {
+		return NULL;
+	}
 	const size_t total = padding + size;
 	if (region->capacity - region->size < total) {
 		return NULL;
@@ -132,7 +134,7 @@ static void arena_fetch_current(Arena* const arena, const size_t size) {
 	arena->prev_size = 0;
 }
 
-void* arena_alloc(Arena* const arena, const size_t size, const size_t alignment) {
+void* arena_allocate(Arena* const arena, const size_t size, const size_t alignment) {
 	if (arena->current == NULL) {
 		arena_fetch_first(arena, size);
 		return &arena->first->data;
@@ -148,7 +150,7 @@ void* arena_alloc(Arena* const arena, const size_t size, const size_t alignment)
 	return result;
 }
 
-void* arena_realloc(Arena* const arena, const size_t size, const size_t alignment) {
+void* arena_reallocate(Arena* const arena, const size_t size, const size_t alignment) {
 	if (arena->current == NULL) {
 		arena_fetch_first(arena, size);
 		return &arena->first->data;
@@ -173,10 +175,13 @@ void* arena_realloc(Arena* const arena, const size_t size, const size_t alignmen
 				arena->current->next = NULL;
 				arena_fetch_current(arena, size);
 			}
-			
-			try(!memcpy_s(&arena->current->data, arena->current->size, tmp_data, tmp_size));
-			return &arena->current->data;
 		}
+		else {
+			arena_fetch_current(arena, size);
+		}
+
+		try(!memcpy_s(&arena->current->data, arena->current->size, tmp_data, tmp_size));
+		return &arena->current->data;
 	}
 
 

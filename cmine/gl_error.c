@@ -1,4 +1,5 @@
 #include "gl_error.h"
+#include "glad.h"
 
 #include <stdio.h>
 

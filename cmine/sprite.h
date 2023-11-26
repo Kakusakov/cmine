@@ -1,4 +1,5 @@
 #pragma once
+#include "fixed_types.h"
 #include "glad.h"
 
 struct UiSprite {
@@ -9,11 +10,11 @@ struct UiSprite {
 typedef struct UiSprite UiSprite;
 
 struct UiVertex {
-	float x;
-	float y;
-	float z;
-	float uv_x;
-	float uv_y;
+	float32_t x;
+	float32_t y;
+	float32_t z;
+	float32_t uv_x;
+	float32_t uv_y;
 };
 typedef struct UiVertex UiVertex;
 

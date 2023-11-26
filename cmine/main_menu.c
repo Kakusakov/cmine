@@ -11,9 +11,9 @@
 #include <stdlib.h>
 
 struct PerspectiveSettings {
-	float fov_y_radians;
-	float near;
-	float far;
+	GLfloat fov_y_radians;
+	GLfloat near;
+	GLfloat far;
 };
 typedef struct PerspectiveSettings PerspectiveSettings;
 
@@ -37,7 +37,7 @@ struct MainMenu {
 typedef struct MainMenu MainMenu;
 
 static MainMenu* create_main_menu(Arena* arena, Input input) {
-	MainMenu* self = arena_alloc(arena, sizeof(MainMenu), _Alignof(MainMenu));
+	MainMenu* self = arena_alloc(arena, 1, MainMenu);
 	self->last_frame_time = (float)input.time.seconds;
 
 	const UiVertices vertices = { {
@@ -53,9 +53,9 @@ static MainMenu* create_main_menu(Arena* arena, Input input) {
 	self->cam.settings.near = 0.1f;
 	self->cam.settings.fov_y_radians = to_radians(75.0f);
 
-	TRY(self->sprite.prog = load_shader_program("ui_vsh.glsl", "ui_fsh.glsl"));
-	TRY(self->sprite.vao = create_ui_vao(vertices));
-	TRY(self->sprite.texture = load_pixel_texture("test.bmp"));
+	try(self->sprite.prog = load_shader_program("ui_vsh.glsl", "ui_fsh.glsl"));
+	try(self->sprite.vao = create_ui_vao(vertices));
+	try(self->sprite.texture = load_pixel_texture("test.bmp"));
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 	return self;
@@ -112,7 +112,7 @@ static void update_main_menu(MainMenu* self, Input input) {
 	glUseProgram(self->sprite.prog);
 
 	GLuint location;
-	TRY((location = glGetUniformLocation(self->sprite.prog, "transform")) != -1);
+	try((location = glGetUniformLocation(self->sprite.prog, "transform")) != -1);
 	glUniformMatrix4fv(location, 1, GL_FALSE, (const GLfloat*)&transform);
 
 	glBindTexture(GL_TEXTURE_2D, self->sprite.texture);
@@ -125,14 +125,14 @@ static void update_main_menu(MainMenu* self, Input input) {
 
 void main_menu_run(void) {
 	Arena* const arena = arena_init();
-	App* app = app_init(arena);
+	App* const app = app_init(arena);
 	app_bind_current_context(app);
 	try(gladLoadGLLoader(app_get_gl_loader(app)));
 	setup_gl_error_callback();
 
 	app_update(app);
 	if (!app_should_close(app)) {
-		MainMenu* main_menu = create_main_menu(arena, app_input(app));
+		MainMenu* const main_menu = create_main_menu(arena, app_input(app));
 		app_update(app);
 		while (!app_should_close(app)) {
 			update_main_menu(main_menu, app_input(app));

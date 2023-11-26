@@ -1,4 +1,5 @@
 #include "image.h"
+#include "glad.h"
 
 #include "pack.h"
 #include "safety.h"

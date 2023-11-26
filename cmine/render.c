@@ -1,4 +1,5 @@
 #include "render.h"
+#include "glad.h"
 
 #include "safety.h"
 

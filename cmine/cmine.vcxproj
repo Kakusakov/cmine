@@ -113,6 +113,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <CompileAs>CompileAsC</CompileAs>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -156,6 +157,7 @@
     <ClInclude Include="app.h" />
     <ClInclude Include="arena.h" />
     <ClInclude Include="chunk.h" />
+    <ClInclude Include="fixed_types.h" />
     <ClInclude Include="glad.h" />
     <ClInclude Include="gl_error.h" />
     <ClInclude Include="image.h" />

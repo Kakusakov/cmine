@@ -11,18 +11,18 @@
 #include <stddef.h>
 
 static inline bool f_aprox_eq(
-	const GLfloat v1, 
-	const GLfloat v2) 
+	const float32_t v1, 
+	const float32_t v2) 
 {
 	return fabs(((double)v1) - ((double)v2)) < DBL_EPSILON;
 }
 
-static inline GLfloat to_radians(const GLfloat degrees) {
-	return degrees * (GLfloat)M_PI / (GLfloat)180.0;
+static inline float32_t to_radians(const float32_t degrees) {
+	return degrees * (float32_t)M_PI / (float32_t)180.0;
 }
 
-static inline GLfloat to_degrees(const GLfloat radians) {
-	return radians * (GLfloat)180.0 / (GLfloat)M_PI;
+static inline float32_t to_degrees(const float32_t radians) {
+	return radians * (float32_t)180.0 / (float32_t)M_PI;
 }
 
 #define IMPLEMENT_VEC_STRUCT(struct_name, name, type, size, zero, one)\
@@ -190,9 +190,9 @@ IMPLEMENT_VEC_STRUCT(struct_name, name, type, size, zero, one)\
 IMPLEMENT_INT_VEC_EXTENSION(struct_name, name, type, size)
 
 
-IMPLEMENT_FLOAT_VEC_STRUCT(Vec2f, vec2f, GLfloat, 2, 0.0f, 1.0f, sqrtf);
-IMPLEMENT_FLOAT_VEC_STRUCT(Vec3f, vec3f, GLfloat, 3, 0.0f, 1.0f, sqrtf);
-IMPLEMENT_FLOAT_VEC_STRUCT(Vec4f, vec4f, GLfloat, 4, 0.0f, 1.0f, sqrtf);
+IMPLEMENT_FLOAT_VEC_STRUCT(Vec2f, vec2f, float32_t, 2, 0.0f, 1.0f, sqrtf);
+IMPLEMENT_FLOAT_VEC_STRUCT(Vec3f, vec3f, float32_t, 3, 0.0f, 1.0f, sqrtf);
+IMPLEMENT_FLOAT_VEC_STRUCT(Vec4f, vec4f, float32_t, 4, 0.0f, 1.0f, sqrtf);
 
 IMPLEMENT_INT_VEC_STRUCT(Vec2s, vec2s, size_t, 2, 0, 1);
 IMPLEMENT_INT_VEC_STRUCT(Vec3s, vec3s, size_t, 3, 0, 1);
@@ -200,13 +200,13 @@ IMPLEMENT_INT_VEC_STRUCT(Vec3s, vec3s, size_t, 3, 0, 1);
 IMPLEMENT_INT_VEC_STRUCT(Vec2i32, vec2i32, int32_t, 2, 0, 1);
 IMPLEMENT_INT_VEC_STRUCT(Vec3i32, vec3i32, int32_t, 3, 0, 1);
 
-IMPLEMENT_FLOAT_VEC_STRUCT(Mat4x4f, mat4x4f, GLfloat, 16, 0, 1, sqrtf);
+IMPLEMENT_FLOAT_VEC_STRUCT(Mat4x4f, mat4x4f, float32_t, 16, 0, 1, sqrtf);
 
-IMPLEMENT_VEC_CONVERSION(Vec2f, Vec2s, vec2f, vec2s, GLfloat, size_t, 2);
-IMPLEMENT_VEC_CONVERSION(Vec3f, Vec3s, vec3f, vec3s, GLfloat, size_t, 3);
+IMPLEMENT_VEC_CONVERSION(Vec2f, Vec2s, vec2f, vec2s, float32_t, size_t, 2);
+IMPLEMENT_VEC_CONVERSION(Vec3f, Vec3s, vec3f, vec3s, float32_t, size_t, 3);
 
-IMPLEMENT_VEC_CONVERSION(Vec2f, Vec2i32, vec2f, vec2i32, GLfloat, int32_t, 2);
-IMPLEMENT_VEC_CONVERSION(Vec3f, Vec3i32, vec3f, vec3i32, GLfloat, int32_t, 3);
+IMPLEMENT_VEC_CONVERSION(Vec2f, Vec2i32, vec2f, vec2i32, float32_t, int32_t, 2);
+IMPLEMENT_VEC_CONVERSION(Vec3f, Vec3i32, vec3f, vec3i32, float32_t, int32_t, 3);
 
 IMPLEMENT_VEC_CONVERSION(Vec2s, Vec2i32, vec2s, vec2i32, size_t, int32_t, 2);
 IMPLEMENT_VEC_CONVERSION(Vec3s, Vec3i32, vec3s, vec3i32, size_t, int32_t, 3);
@@ -214,9 +214,9 @@ IMPLEMENT_VEC_CONVERSION(Vec3s, Vec3i32, vec3s, vec3i32, size_t, int32_t, 3);
 // TODO: this should use _Generic.
 
 static inline Vec3f vec3f_new(
-	const GLfloat x, 
-	const GLfloat y, 
-	const GLfloat z)
+	const float32_t x, 
+	const float32_t y, 
+	const float32_t z)
 {
 	Vec3f vec;
 	vec.vs[0] = x;
@@ -252,10 +252,10 @@ static inline Vec3f vec3f_cross(const Vec3f a, const Vec3f b) {
 }
 
 static inline Vec4f vec4f_new(
-	const GLfloat x, 
-	const GLfloat y, 
-	const GLfloat z, 
-	const GLfloat w)
+	const float32_t x, 
+	const float32_t y, 
+	const float32_t z, 
+	const float32_t w)
 {
 	Vec4f vec;
 	vec.vs[0] = x;
@@ -298,7 +298,7 @@ static inline Vec3f vec4f_plane_intersect_line(
 					dir)));
 }
 
-static inline GLfloat mat4x4f_get_element(
+static inline float32_t mat4x4f_get_element(
 	const Mat4x4f mat, 
 	const size_t row, 
 	const size_t col) 
@@ -411,7 +411,7 @@ static inline Mat4x4f mat4x4f_diagonal_mat(const Vec4f value) {
 	return mat;
 }
 
-static inline Mat4x4f mat4x4f_scalar_mat(const GLfloat value) {
+static inline Mat4x4f mat4x4f_scalar_mat(const float32_t value) {
 	return mat4x4f_diagonal_mat(vec4f_new(value, value, value, value));
 }
 
@@ -475,10 +475,10 @@ static inline Mat4x4f mat4x4f_scale_mat(const Vec3f scale) {
 	return mat;
 }
 
-static inline Mat4x4f mat4x4f_rotate_axis_x_mat(const GLfloat radians) {
+static inline Mat4x4f mat4x4f_rotate_axis_x_mat(const float32_t radians) {
 	Mat4x4f mat;
-	const GLfloat c = cosf(radians);
-	const GLfloat s = sinf(radians);
+	const float32_t c = cosf(radians);
+	const float32_t s = sinf(radians);
 
 	mat.vs[0] = 1.0f;
 	mat.vs[1] = 0.0f;
@@ -503,10 +503,10 @@ static inline Mat4x4f mat4x4f_rotate_axis_x_mat(const GLfloat radians) {
 	return mat;
 }
 
-static inline Mat4x4f mat4x4f_rotate_axis_y(const GLfloat radians) {
+static inline Mat4x4f mat4x4f_rotate_axis_y(const float32_t radians) {
 	Mat4x4f mat;
-	const GLfloat c = cosf(radians);
-	const GLfloat s = sinf(radians);
+	const float32_t c = cosf(radians);
+	const float32_t s = sinf(radians);
 
 	mat.vs[0] = c;
 	mat.vs[1] = 0.0f;
@@ -531,10 +531,10 @@ static inline Mat4x4f mat4x4f_rotate_axis_y(const GLfloat radians) {
 	return mat;
 }
 
-static inline Mat4x4f mat4x4f_rotate_axis_z(const GLfloat radians) {
+static inline Mat4x4f mat4x4f_rotate_axis_z(const float32_t radians) {
 	Mat4x4f mat;
-	const GLfloat c = cosf(radians);
-	const GLfloat s = sinf(radians);
+	const float32_t c = cosf(radians);
+	const float32_t s = sinf(radians);
 
 	mat.vs[0] = c;
 	mat.vs[1] = -s;
@@ -560,12 +560,12 @@ static inline Mat4x4f mat4x4f_rotate_axis_z(const GLfloat radians) {
 }
 
 static inline Mat4x4f mat4x4f_ortho_mat(
-	const GLfloat left,
-	const GLfloat right,
-	const GLfloat bottom,
-	const GLfloat top,
-	const GLfloat near,
-	const GLfloat far) 
+	const float32_t left,
+	const float32_t right,
+	const float32_t bottom,
+	const float32_t top,
+	const float32_t near,
+	const float32_t far) 
 {
 	Mat4x4f mat;
 
@@ -593,13 +593,13 @@ static inline Mat4x4f mat4x4f_ortho_mat(
 }
 
 static inline Mat4x4f mat4x4f_perspective_mat(
-	const GLfloat aspect,
-	const GLfloat fov_y,
-	const GLfloat near,
-	const GLfloat far) 
+	const float32_t aspect,
+	const float32_t fov_y,
+	const float32_t near,
+	const float32_t far) 
 {
 	Mat4x4f mat;
-	const GLfloat f = 1.0f / tanf(fov_y / 2.0f);
+	const float32_t f = 1.0f / tanf(fov_y / 2.0f);
 
 	mat.vs[0] = f / aspect;
 	mat.vs[1] = 0.0f;

@@ -1,6 +1,5 @@
 #pragma once
-#include <stdint.h>
-#include "glad.h"
+#include "fixed_types.h"
 #include "vec_math.h"
 
 typedef struct PerlinSeed PerlinSeed;
@@ -23,19 +22,19 @@ GLfloat perlin2(
 
 struct FBMSettings {
 	uint8_t octave_count;
-	GLfloat frequency;
-	GLfloat intensity;
-	GLfloat lacunarity;
-	GLfloat persistance;
+	float32_t frequency;
+	float32_t intensity;
+	float32_t lacunarity;
+	float32_t persistance;
 };
 typedef struct FBMSettings FBMSettings;
 
-GLfloat fbm3(
+float32_t fbm3(
 	const PerlinSeed* seed,
 	const FBMSettings* settings,
 	const Vec3f pos
 );
-GLfloat fbm2(
+float32_t fbm2(
 	const PerlinSeed* seed,
 	const FBMSettings* settings,
 	const Vec2f pos

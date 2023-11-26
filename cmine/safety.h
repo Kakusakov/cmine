@@ -1,5 +1,5 @@
 #pragma once
-#include <stddef.h>
+#include "fixed_types.h"
 #include "unreachable.h"
 
 void _stry_fail(const char* expression, const char* filename, unsigned line_number);

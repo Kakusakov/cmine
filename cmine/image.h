@@ -1,8 +1,6 @@
 #pragma once
 #include "glad.h"
-
-#include <stdint.h>
-#include <stdbool.h>
+#include "fixed_types.h"
 
 struct BmpImage {
 	uint8_t* pixel_array;

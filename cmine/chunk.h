@@ -1,11 +1,8 @@
 #pragma once
+#include "fixed_types.h"
 #include "perlin.h"
-#include "vec_math.h"
 
 #include "glad.h"
-
-#include <stdint.h>
-#include <stdbool.h>
 
 #define ATLAS_X_LEN 16
 #define ATLAS_Y_LEN 16
