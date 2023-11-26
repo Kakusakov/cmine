@@ -94,7 +94,7 @@ App* app_init(Arena* const arena) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	App* const app = arena_alloc(arena, sizeof(App));
+	App* const app = arena_alloc(arena, sizeof(App), _Alignof(App));
 	try((app->window = glfwCreateWindow(
 		800,
 		600,

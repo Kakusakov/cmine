@@ -37,7 +37,7 @@ struct MainMenu {
 typedef struct MainMenu MainMenu;
 
 static MainMenu* create_main_menu(Arena* arena, Input input) {
-	MainMenu* self = arena_alloc(arena, sizeof(MainMenu));
+	MainMenu* self = arena_alloc(arena, sizeof(MainMenu), _Alignof(MainMenu));
 	self->last_frame_time = (float)input.time.seconds;
 
 	const UiVertices vertices = { {
