@@ -1,11 +1,12 @@
 #include "sprite.h"
 
 #include "image.h"
+#include "glad.h"
 
 #include <stdlib.h>
 
-GLuint load_pixel_texture(const char* filename) {
-	GLuint texture;
+gl_handle load_pixel_texture(const char* filename) {
+	gl_handle texture;
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -36,15 +37,15 @@ GLuint load_pixel_texture(const char* filename) {
 	return texture;
 }
 
-GLuint create_ui_vao(UiVertices vertices) {
-	static const unsigned int indices[] = {
+gl_handle create_ui_vao(ui_vertices vertices) {
+	static const uint32_t indices[] = {
 		0, 1, 3,
 		1, 2, 3
 	};
-	GLuint vao;
+	gl_handle vao;
 	glGenVertexArrays(1, &vao);
-	GLuint vbo;
-	GLuint ebo;
+	gl_handle vbo;
+	gl_handle ebo;
 	glGenBuffers(1, &vbo);
 	glGenBuffers(1, &ebo);
 
@@ -56,9 +57,9 @@ GLuint create_ui_vao(UiVertices vertices) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float32_t), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float32_t), (void*)(3 * sizeof(float32_t)));
 	glEnableVertexAttribArray(1);
 
 	glBindVertexArray(0);

@@ -1,9 +1,9 @@
 #pragma once
-#include "glad.h"
+#include "fixed_types.h"
 
-GLuint load_shader(const char* filename, GLenum shader_type);
-GLuint link_shader_program(GLuint vertext_shader, GLuint fragment_shader);
-GLuint load_shader_program(
+gl_handle load_shader(const char* filename, gl_enum shader_type);
+gl_handle link_shader_program(gl_handle vertext_shader, gl_handle fragment_shader);
+gl_handle load_shader_program(
 	char* vertext_shader_filename,
 	char* fragment_shader_filename
 );

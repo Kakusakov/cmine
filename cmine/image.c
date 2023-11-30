@@ -100,8 +100,8 @@ static BmpImage load_bmp_from_file(FILE* file) {
 		const size_t image_size = width * height * byte_count;
 
 		uint8_t* buf;
-		GLenum texture_format;
-		GLenum texture_type;
+		gl_enum texture_format;
+		gl_enum texture_type;
 		if (ih.compression == 0) {
 			switch (ih.bit_count) {
 			case 24:

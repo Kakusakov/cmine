@@ -1,5 +1,4 @@
 #pragma once
-#include "glad.h"
 #include "fixed_types.h"
 
 struct BmpImage {
@@ -7,8 +6,8 @@ struct BmpImage {
 	uint32_t width;
 	size_t height;
 	size_t pixel_size;
-	GLenum texture_format;
-	GLenum texture_type;
+	gl_enum texture_format;
+	gl_enum texture_type;
 };
 typedef struct BmpImage BmpImage;
 

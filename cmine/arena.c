@@ -1,11 +1,10 @@
 #include "arena.h"
 
 #include "safety.h"
+#include "fixed_types.h"
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
-#include <stdbool.h>
 
 typedef struct Region Region;
 struct Region {

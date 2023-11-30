@@ -1,9 +1,10 @@
 #include "gl_error.h"
+#include "fixed_types.h"
 #include "glad.h"
 
 #include <stdio.h>
 
-static char* gl_message_source_name(GLenum source) {
+static char* gl_message_source_name(gl_enum source) {
 	switch (source) {
 	case GL_DEBUG_SOURCE_API:
 		return "GL_DEBUG_SOURCE_API";
@@ -22,7 +23,7 @@ static char* gl_message_source_name(GLenum source) {
 	}
 }
 
-static char* gl_message_type_name(GLenum type) {
+static char* gl_message_type_name(gl_enum type) {
 	switch (type) {
 	case GL_DEBUG_TYPE_ERROR:
 		return "GL_DEBUG_TYPE_ERROR";
@@ -47,7 +48,7 @@ static char* gl_message_type_name(GLenum type) {
 	}
 }
 
-static char* gl_message_severity_name(GLenum severity) {
+static char* gl_message_severity_name(gl_enum severity) {
 	switch (severity) {
 	case GL_DEBUG_SEVERITY_HIGH:
 		return "GL_DEBUG_SEVERITY_HIGH";
@@ -63,12 +64,12 @@ static char* gl_message_severity_name(GLenum severity) {
 }
 
 static void GLAPIENTRY gl_message_callback(
-	GLenum source,
-	GLenum type,
-	GLuint id,
-	GLenum severity,
-	GLsizei length,
-	const GLchar* message,
+	gl_enum source,
+	gl_enum type,
+	gl_handle id,
+	gl_enum severity,
+	int32_t length,
+	const char* message,
 	const void* userParam
 ) {
 	fprintf(

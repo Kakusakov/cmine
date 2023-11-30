@@ -1,41 +1,40 @@
 #pragma once
 #include "fixed_types.h"
-#include "vec_math.h"
+#include "arena.h"
 
 typedef struct PerlinSeed PerlinSeed;
-struct PerlinSeed {
-	uint8_t p[512];
-};
 
-void perlin_init_from_stdrand(
-	PerlinSeed* seed, 
-	unsigned rand_seed
-);
-GLfloat perlin3(
-	const PerlinSeed* seed,
-	const Vec3f pos
-);
-GLfloat perlin2(
-	const PerlinSeed* seed, 
-	const Vec2f pos
-);
+PerlinSeed* perlin_init_from_stdrand(Arena* arena, unsigned rand_seed);
 
-struct FBMSettings {
+float32_t perlin3(const PerlinSeed* seed, float32_t x, float32_t y, float32_t z);
+float32_t perlin2(const PerlinSeed* seed, float32_t x, float32_t y);
+float32_t perlin1(const PerlinSeed* seed, float32_t x);
+
+struct fbm_settings {
 	uint8_t octave_count;
 	float32_t frequency;
 	float32_t intensity;
 	float32_t lacunarity;
 	float32_t persistance;
 };
-typedef struct FBMSettings FBMSettings;
+typedef struct fbm_settings fbm_settings;
 
 float32_t fbm3(
 	const PerlinSeed* seed,
-	const FBMSettings* settings,
-	const Vec3f pos
+	const fbm_settings* settings,
+	float32_t x,
+	float32_t y,
+	float32_t z
 );
 float32_t fbm2(
 	const PerlinSeed* seed,
-	const FBMSettings* settings,
-	const Vec2f pos
+	const fbm_settings* settings,
+	float32_t x,
+	float32_t y
+);
+
+float32_t fbm1(
+	const PerlinSeed* seed,
+	const fbm_settings* settings,
+	float32_t x
 );

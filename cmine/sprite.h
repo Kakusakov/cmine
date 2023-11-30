@@ -1,27 +1,26 @@
 #pragma once
 #include "fixed_types.h"
-#include "glad.h"
 
-struct UiSprite {
-	GLuint vao;
-	GLuint prog;
-	GLuint texture;
+struct ui_sprite {
+	gl_handle vao;
+	gl_handle prog;
+	gl_handle texture;
 };
-typedef struct UiSprite UiSprite;
+typedef struct ui_sprite ui_sprite;
 
-struct UiVertex {
+struct ui_vertex {
 	float32_t x;
 	float32_t y;
 	float32_t z;
 	float32_t uv_x;
 	float32_t uv_y;
 };
-typedef struct UiVertex UiVertex;
+typedef struct ui_vertex ui_vertex;
 
-struct UiVertices {
-	UiVertex values[4];
+struct ui_vertices {
+	ui_vertex values[4];
 };
-typedef struct UiVertices UiVertices;
+typedef struct ui_vertices ui_vertices;
 
-GLuint load_pixel_texture(const char* filename);
-GLuint create_ui_vao(UiVertices vertices);
+gl_handle load_pixel_texture(const char* filename);
+gl_handle create_ui_vao(ui_vertices vertices);
