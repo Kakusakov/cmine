@@ -10,8 +10,6 @@
 #include "gl_error.h"
 #include "glad.h"
 
-#include <stdlib.h>
-
 struct perspective_settings {
 	float32_t fov_y_radians;
 	float32_t near;

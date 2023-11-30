@@ -4,7 +4,6 @@
 #include "pack.h"
 #include "safety.h"
 
-#include <stdlib.h>
 #include <stdio.h>
 
 PACK(struct BmpFileHeader {
@@ -61,7 +60,7 @@ static void* load_uncompressed_bmp_data(
 	return buf;
 
 err0:
-	free(buf);
+	sfree(buf);
 	return NULL;
 }
 
@@ -241,6 +240,6 @@ bool store_bmp_image(const char* filename, const BmpImage* image) {
 }
 
 void free_bmp_image(BmpImage* image) {
-	free(image->pixel_array);
+	sfree(image->pixel_array);
 	*image = (BmpImage){ 0 };
 }

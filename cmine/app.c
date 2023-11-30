@@ -79,11 +79,15 @@ static void update_input(App* app) {
 	app->input.keys.is_d_pressed = glfwGetKey(app->window, GLFW_KEY_D);
 }
 
+static void glfw_deinit(void) {
+	glfwTerminate();
+}
+
 static void glfw_static_init(void) {
 	static bool is_initialized = false;
 	if (!is_initialized) {
 		setup_glfw_error_callback();
-		satexit(glfwTerminate);
+		satexit(glfw_deinit);
 		try(glfwInit());
 		is_initialized = true;
 	}

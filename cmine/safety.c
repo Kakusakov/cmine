@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-static void (*satexit_callback)(void) = NULL;
-
 static void _smalloc_fail(size_t size) {
 	fprintf(
 		stderr,
@@ -33,17 +31,19 @@ void* smalloc(size_t size) {
 }
 void* srealloc(void* block, size_t size) {
 	void* ptr = smalloc(size);
-	free(block);
+	sfree(block);
 	return ptr;
 }
+void sfree(void* block) {
+	free(block);
+}
 
-void satexit(void (*callback)(void)) {
-	satexit_callback = callback;
+void satexit(void (__cdecl *callback)(void)) {
+	if (atexit(callback)) sexit(1);
 }
 void sexit(int error_code) {
 	static int is_exiting = 0;
 	if (is_exiting) abort();
 	else is_exiting = 1;
-	if (satexit_callback) satexit_callback();
 	exit(error_code);
 }

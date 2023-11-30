@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include "fixed_types.h"
 
 uint32_t hash_u32(uint32_t u) {
 	u = (u ^ 61) ^ (u >> 16);

@@ -3,7 +3,6 @@
 #include "safety.h"
 #include "fixed_types.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 typedef struct Region Region;
@@ -30,7 +29,7 @@ static Region* region_init(const size_t least_capacity) {
 }
 
 static void region_deinit(Region* const region) {
-	free(region);
+	sfree(region);
 }
 
 static void region_chain_deinit(Region* const region) {
@@ -210,5 +209,5 @@ void arena_deinit(Arena* const arena) {
 	arena->empty = NULL;
 	arena->prev_size = 0;
 
-	free(arena);
+	sfree(arena);
 }

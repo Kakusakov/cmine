@@ -4,7 +4,6 @@
 #include "safety.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 
 static char* read_file(const char* filename) {
 	FILE* f = fopen(filename, "rb");
@@ -22,7 +21,7 @@ static char* read_file(const char* filename) {
 	return buf;
 
 err2:
-	free(buf);
+	sfree(buf);
 err1:
 	fclose(f);
 err0:
@@ -63,7 +62,7 @@ err2:
 		log
 	);
 
-	free(source);
+	sfree(source);
 err1:
 	glDeleteShader(shader);
 err0:

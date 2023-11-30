@@ -2,8 +2,6 @@
 #include "safety.h"
 #include "vec.h"
 
-#include <stdlib.h>
-
 struct Chunk {
 	bool is_generated;
 	// [x, y, z]
@@ -258,5 +256,5 @@ void chunk_area_generate_chunk_mesh(
 		}
 	}
 	// TODO: Load the vertices into VBO, update the chunk's VAO.
-	free(vertices);
+	sfree(vertices);
 }
