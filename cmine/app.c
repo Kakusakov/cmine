@@ -112,8 +112,8 @@ void app_deinit(App* const app) {
 	glfwDestroyWindow(app->window);
 }
 
-void* app_get_gl_loader(App* const app) {
-	return glfwGetProcAddress;
+GLLoaderFunptr app_get_gl_loader(App* const app) {
+	return (GLLoaderFunptr)glfwGetProcAddress;
 }
 void app_bind_current_context(App* const app) {
 	glfwMakeContextCurrent(app->window);

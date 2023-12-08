@@ -2,10 +2,12 @@
 
 #include "image.h"
 #include "glad.h"
+#include "safety.h"
 
 #include <stdlib.h>
 
 gl_handle load_pixel_texture(const char* filename) {
+	Arena* temp = arena_init();
 	gl_handle texture;
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
@@ -15,23 +17,24 @@ gl_handle load_pixel_texture(const char* filename) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	BmpImage image = load_bmp_image(filename);
-	if (!image.pixel_array) {
+	Image* image = image_load_bmp(filename, temp);
+	if (!image) {
+		arena_deinit(temp);
 		glDeleteTextures(1, &texture);
 		return 0;
 	}
 	glTexImage2D(
-		GL_TEXTURE_2D, 
+		GL_TEXTURE_2D,
+		0,
+		GL_RGB,
+		image->width,
+		image->height,
 		0, 
-		GL_RGB, 
-		image.width, 
-		image.height,
-		0, 
-		image.texture_format, 
-		image.texture_type,
-		image.pixel_array
+		GL_RGBA,
+		GL_UNSIGNED_BYTE,
+		&image->pixels
 	);
-	free_bmp_image(&image);
+	arena_deinit(temp);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	return texture;

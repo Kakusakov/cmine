@@ -1,16 +1,25 @@
 #pragma once
 #include "fixed_types.h"
+#include "arena.h"
+#include "pack.h"
 
-struct BmpImage {
-	uint8_t* pixel_array;
-	uint32_t width;
+#include <stdio.h>
+
+PACK(struct Color {
+	uint8_t red;
+	uint8_t green;
+	uint8_t blue;
+	uint8_t alpha;
+});
+typedef struct Color Color;
+
+struct Image {
+	size_t width;
 	size_t height;
-	size_t pixel_size;
-	gl_enum texture_format;
-	gl_enum texture_type;
+	Color pixels[];
 };
-typedef struct BmpImage BmpImage;
+typedef struct Image Image;
 
-BmpImage load_bmp_image(const char* filename);
-bool store_bmp_image(const char* filename, const BmpImage* image);
-void free_bmp_image(BmpImage* image);
+Image* image_try_from_bmp_file(FILE* file, Arena* arena);
+Image* image_load_bmp(const char* filename, Arena* arena);
+
