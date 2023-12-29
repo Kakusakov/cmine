@@ -1,7 +1,6 @@
 #include "arena.h"
 
 #include "safety.h"
-#include "fixed_types.h"
 
 #include <string.h>
 

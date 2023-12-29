@@ -20,6 +20,7 @@ struct Image {
 };
 typedef struct Image Image;
 
+Image* iamge_init(Arena* arena, size_t width, size_t height);
 Image* image_try_from_bmp_file(FILE* file, Arena* arena);
 Image* image_load_bmp(const char* filename, Arena* arena);
 

@@ -1,17 +1,17 @@
 #pragma once
 #include "fixed_types.h"
-#include "vec.h"
 #include "perlin.h"
 
-#include "glad.h"
+// I would love to have C23 constexpr for 
+// compiletime constants, but C23 doesn't
+// have good support yet.
+
+#define CHUNK_SIDELEN 8
 
 #define ATLAS_X_LEN 16
 #define ATLAS_Y_LEN 16
 
 typedef uint8_t block_id;
-
-// I would love to have C23 constexpr, but my 
-// version of msvs does not have it.
 
 #define BLOCK_UNKNOWN ((block_id)0)
 #define BLOCK_AIR ((block_id)1)
@@ -20,13 +20,28 @@ typedef uint8_t block_id;
 #define BLOCK_FIRST_ID BLOCK_UNKNOWN
 #define BLOCK_LAST_ID BLOCK_STONE
 
-#define CHUNK_SIDELEN 8
-
 typedef struct Chunk Chunk;
-typedef struct ChunkArea ChunkArea;
+typedef struct Chunks Chunks;
 
-//struct world_generation_settings {
-//	PerlinSeed* perlin_seed;
-//	FBMSettings heightmap_fbm;
-//};
-//typedef struct world_generation_settings world_generation_settings;
+typedef struct ChunkArea ChunkArea;
+struct ChunkArea {
+	int32_t min_x;
+	int32_t min_y;
+	int32_t min_z;
+
+	size_t offset_x;
+	size_t offset_y;
+	size_t offset_z;
+};
+
+Chunks* chunks_init(Arena* arena, size_t sidelen);
+void chunks_deinit(Chunks* chunks);
+
+void chunk_area_generate_blocks(
+	const ChunkArea* area,
+	Chunks* chunks,
+	const Perlin* perlin,
+	const FBM* heightmap_fbm);
+void chunk_area_generate_meshes(
+	const ChunkArea* area, 
+	Chunks* chunks);

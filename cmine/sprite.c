@@ -40,7 +40,7 @@ gl_handle load_pixel_texture(const char* filename) {
 	return texture;
 }
 
-gl_handle create_ui_vao(ui_vertices vertices) {
+gl_handle create_ui_vao(UIVertices vertices) {
 	static const uint32_t indices[] = {
 		0, 1, 3,
 		1, 2, 3

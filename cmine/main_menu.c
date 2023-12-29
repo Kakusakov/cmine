@@ -1,7 +1,6 @@
 #include "main_menu.h"
 
-#include "vec.h"
-#include "mat.h"
+#include "mathf.h"
 #include "sprite.h"
 #include "safety.h"
 #include "sprite.h"
@@ -10,45 +9,45 @@
 #include "gl_error.h"
 #include "glad.h"
 
-struct perspective_settings {
+struct PerspectiveSettings {
 	float32_t fov_y_radians;
 	float32_t near;
 	float32_t far;
 };
-typedef struct perspective_settings perspective_settings;
+typedef struct PerspectiveSettings PerspectiveSettings;
 
-struct view {
-	vec3f pos;
-	vec3f look;
+struct View {
+	Vec3f pos;
+	Vec3f look;
 };
-typedef struct view view;
+typedef struct View View;
 
-struct perspective_camera {
-	perspective_settings settings;
-	view view;
+struct PerspectiveCamera {
+	PerspectiveSettings settings;
+	View View;
 };
-typedef struct perspective_camera perspective_camera;
+typedef struct PerspectiveCamera PerspectiveCamera;
 
-struct main_menu {
+struct MainMenu {
 	float32_t last_frame_time;
-	perspective_camera cam;
-	ui_sprite sprite;
+	PerspectiveCamera cam;
+	UISprite sprite;
 };
-typedef struct main_menu main_menu;
+typedef struct MainMenu MainMenu;
 
-static main_menu* create_main_menu(Arena* arena, Input input) {
-	main_menu* self = arena_alloc(arena, 1, main_menu);
+static MainMenu* create_main_menu(Arena* arena, Input input) {
+	MainMenu* self = arena_alloc(arena, 1, MainMenu);
 	self->last_frame_time = (float32_t)input.time.seconds;
 
-	const ui_vertices vertices = { {
+	const UIVertices vertices = { {
 			// positions          // texture coords
 			{  0.5f,  0.5f, 0.0f,   1.0f, 1.0f },   // top right
 			{  0.5f, -0.5f, 0.0f,   1.0f, 0.0f },   // bottom right
 			{ -0.5f, -0.5f, 0.0f,   0.0f, 0.0f },   // bottom left
 			{ -0.5f,  0.5f, 0.0f,   0.0f, 1.0f },   // top left 
 		} };
-	self->cam.view.pos = (vec3f){ -0.4f, 0.0f, -0.0f };
-	self->cam.view.look = vec3f_forward();
+	self->cam.View.pos = (Vec3f){ -0.4f, 0.0f, -0.0f };
+	self->cam.View.look = vec3f_forward();
 	self->cam.settings.far = 100.0f;
 	self->cam.settings.near = 0.1f;
 	self->cam.settings.fov_y_radians = to_radians(75.0f);
@@ -61,17 +60,17 @@ static main_menu* create_main_menu(Arena* arena, Input input) {
 	return self;
 }
 
-static void destroy_main_menu(main_menu* self) {
+static void destroy_main_menu(MainMenu* self) {
 	glDeleteProgram(self->sprite.prog);
 	glDeleteTextures(1, &self->sprite.texture);
 	glDeleteVertexArrays(1, &self->sprite.vao);
 }
 
-static void update_main_menu(main_menu* self, Input input) {
+static void update_main_menu(MainMenu* self, Input input) {
 	float32_t time = (float32_t)input.time.seconds;
 	float32_t delta = time - self->last_frame_time;
 
-	vec3f dir = { 0, 0, 0 };
+	Vec3f dir = { 0, 0, 0 };
 	if (input.keys.is_w_pressed) {
 		dir = vec3f_forward();
 	}
@@ -84,21 +83,21 @@ static void update_main_menu(main_menu* self, Input input) {
 	if (input.keys.is_d_pressed) {
 		dir = vec3f_left();
 	}
-	self->cam.view.pos.x += dir.x * delta;
-	self->cam.view.pos.y += dir.y * delta;
-	self->cam.view.pos.z += dir.z * delta;
+	self->cam.View.pos.x += dir.x * delta;
+	self->cam.View.pos.y += dir.y * delta;
+	self->cam.View.pos.z += dir.z * delta;
 
-	mat4x4 transform = mat4x4_matmul(
+	Mat4x4 transform = mat4x4_matmul(
 		mat4x4_matmul(
 			mat4x4_matmul(
 				mat4x4_identity(),
 				mat4x4_look_at(
-					(vec3f) { sinf(time), 0.0f, cosf(time) },
-					(vec3f) { 0, 0, 0 },
+					(Vec3f) { sinf(time), 0.0f, cosf(time) },
+					(Vec3f) { 0, 0, 0 },
 					vec3f_up()
 				)
 			),
-			mat4x4_translate(self->cam.view.pos)
+			mat4x4_translate(self->cam.View.pos)
 		),
 		mat4x4_perspective(
 			(float32_t)input.window.width / (float32_t)input.window.height,
@@ -134,13 +133,13 @@ void main_menu_run(void) {
 
 	app_update(app);
 	if (!app_should_close(app)) {
-		main_menu* main_menu = create_main_menu(arena, app_input(app));
+		MainMenu* MainMenu = create_main_menu(arena, app_input(app));
 		app_update(app);
 		while (!app_should_close(app)) {
-			update_main_menu(main_menu, app_input(app));
+			update_main_menu(MainMenu, app_input(app));
 			app_update(app);
 		}
-		destroy_main_menu(main_menu);
+		destroy_main_menu(MainMenu);
 	}
 
 	app_unbind_current_context();

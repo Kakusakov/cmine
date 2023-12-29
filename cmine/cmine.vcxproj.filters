@@ -51,9 +51,6 @@
     <ClCompile Include="perlin.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vec.h">
-      <Filter>Header Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="image.h">
@@ -107,7 +104,7 @@
     <ClInclude Include="fixed_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="mat.h">
+    <ClInclude Include="mathf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

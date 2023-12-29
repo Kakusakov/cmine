@@ -1,134 +1,37 @@
 #include "chunk.h"
 #include "safety.h"
-#include "vec.h"
-
-struct Chunk {
-	bool is_generated;
-	// [x, y, z]
-	block_id blocks[CHUNK_SIDELEN * CHUNK_SIDELEN * CHUNK_SIDELEN];
-	gl_handle vao;
-};
-
-struct ChunkArea {
-	vec3i pos;
-	vec3size offset;
-	size_t sidelen;
-
-	// [x, y, z]
-	Chunk* chunks;
-};
+#include "mathf.h"
+#include "glad.h"
 
 typedef uint8_t block_surface_culling_id;
 
 // Surface never has a texure.
-#define BLOCK_SURFACE_CULLING_ALWAYS ((block_surface_culling_id)0)
-// Surface has a texture only if the adjacent surface doesn't.
-#define BLOCK_SURFACE_CULLING_WEAK ((block_surface_culling_id)1)
-// Surface always has a texture.
-#define BLOCK_SURFACE_CULLING_STRONG ((block_surface_culling_id)2)
+#define BLOCK_SURFACE_CULLING_TRANSPARENT ((block_surface_culling_id)0)
+// Surface has a texture only if the adjacent surface is transparent.
+#define BLOCK_SURFACE_CULLING_SEMITRANSPARENT ((block_surface_culling_id)1)
+// Surface has a texture only if the adjacent surface is transparent or semitransparent.
+#define BLOCK_SURFACE_CULLING_SOLID ((block_surface_culling_id)2)
 
-#define BLOCK_SURFACE_CULLING_FIRST_ID BLOCK_SURFACE_CULLING_ALWAYS
-#define BLOCK_SURFACE_CULLING_LAST_ID BLOCK_SURFACE_CULLING_STRONG
+#define BLOCK_SURFACE_CULLING_FIRST_ID BLOCK_SURFACE_CULLING_TRANSPARENT
+#define BLOCK_SURFACE_CULLING_LAST_ID BLOCK_SURFACE_CULLING_SOLID
 
-block_surface_culling_id block_get_block_surface_culling_strategy(block_id block)
-{
+static block_surface_culling_id block_get_block_surface_culling_strategy(block_id block) {
 	switch (block) {
 	case BLOCK_UNKNOWN:
-		return BLOCK_SURFACE_CULLING_ALWAYS;
+		return BLOCK_SURFACE_CULLING_TRANSPARENT;
 	case BLOCK_AIR:
-		return BLOCK_SURFACE_CULLING_ALWAYS;
+		return BLOCK_SURFACE_CULLING_TRANSPARENT;
 	case BLOCK_STONE:
-		return BLOCK_SURFACE_CULLING_STRONG;
+		return BLOCK_SURFACE_CULLING_SOLID;
 	}
 	try(false);
 }
 
-bool block_surface_culling_should_cull(
+static bool block_surface_culling_should_cull(
 	block_surface_culling_id from,
 	block_surface_culling_id to)
 {
 	return from <= to;
-}
-
-static size_t to_block_index(vec3size pos)
-{
-	try(pos.x < CHUNK_SIDELEN);
-	try(pos.y < CHUNK_SIDELEN);
-	try(pos.z < CHUNK_SIDELEN);
-
-	return 
-		pos.x * CHUNK_SIDELEN * CHUNK_SIDELEN +
-		pos.y * CHUNK_SIDELEN +
-		pos.z;
-}
-
-block_id* chunk_block_at(
-	Chunk* const chunk, 
-	vec3size pos)
-{
-	return &chunk->blocks[to_block_index(pos)];
-}
-
-static size_t to_chunk_index(
-	vec3size area_pos,
-	size_t sidelen) 
-{
-	return 
-		area_pos.x * sidelen * sidelen +
-		area_pos.y * sidelen +
-		area_pos.z;
-}
-
-Chunk* chunk_area_get_chunk_at(
-	ChunkArea* const area,
-	vec3i chunk_pos)
-{
-	try(chunk_pos.x > area->pos.x && chunk_pos.x < area->pos.x + area->sidelen);
-	try(chunk_pos.y > area->pos.y && chunk_pos.y < area->pos.y + area->sidelen);
-	try(chunk_pos.z > area->pos.z && chunk_pos.z < area->pos.z + area->sidelen);
-
-	vec3size pos = {
-		((size_t)(chunk_pos.x - area->pos.x)) % area->sidelen,
-		((size_t)(chunk_pos.y - area->pos.y)) % area->sidelen,
-		((size_t)(chunk_pos.z - area->pos.z)) % area->sidelen,
-	};
-	return &area->chunks[to_chunk_index(pos, area->sidelen)];
-}
-
-void chunk_generate_blocks(
-	const PerlinSeed* seed,
-	const fbm_settings* heightmap_fmb,
-	Chunk* chunk,
-	vec3i chunk_pos)
-{
-	for (vec3size pos = { 0, 0, 0 }; pos.x < CHUNK_SIDELEN; pos.x++) {
-		for (pos.z = 0; pos.z < CHUNK_SIDELEN; pos.z++) {
-			int32_t height = (int32_t)fbm2(
-				seed,
-				heightmap_fmb,
-				chunk_pos.x * CHUNK_SIDELEN + (int32_t)pos.x,
-				chunk_pos.x * CHUNK_SIDELEN + (int32_t)pos.z
-			);
-			for (pos.y = 0; pos.y < CHUNK_SIDELEN; pos.y++) {
-				int32_t world_y = chunk_pos.y * CHUNK_SIDELEN + (int32_t)pos.y;
-				block_id* block = chunk_block_at(chunk, pos);
-				*block = world_y > height ? BLOCK_AIR : BLOCK_STONE;
-			}
-	// Let this be a reminder.
-	//for (Vec3s local_pos = vec3s_zero(); local_pos.vs[0] < CHUNK_SIDELEN; local_pos.vs[0]++) {
-	//	for (local_pos.vs[2] = 0; local_pos.vs[2] < CHUNK_SIDELEN; local_pos.vs[2]++) {
-			/*const int32_t height = (int32_t)fbm2(
-				&settings->perlin_seed,
-				&settings->heightmap_fbm,
-				(float)local_pos.vs[0],
-				(float)local_pos.vs[2]);
-			for (local_pos.vs[1] = 0; local_pos.vs[1] < CHUNK_SIDELEN; local_pos.vs[1]++) {
-				const int32_t y = chunk_pos.vs[1] * CHUNK_SIDELEN + (int32_t)local_pos.vs[1];
-				BlockId* const block = chunk_block_at(chunk, local_pos);
-				*block = y > height ? BLOCK_AIR : BLOCK_STONE;
-			}*/
-		}
-	}
 }
 
 typedef uint8_t block_surface_id;
@@ -143,58 +46,71 @@ typedef uint8_t block_surface_id;
 #define BLOCK_SURFACE_FIRST_ID BLOCK_SURFACE_RIGHT
 #define BLOCK_SURFACE_LAST_ID BLOCK_SURFACE_BACK
 
-vec3i block_surface_get_normal(const block_surface_id surface) {
-	vec3i ret = { 0, 0, 0 };
-	switch (surface) {
+static void block_surface_step_towards(
+	block_surface_id surface_id,
+	int32_t* x,
+	int32_t* y,
+	int32_t* z)
+{
+	switch (surface_id) {
 	case BLOCK_SURFACE_RIGHT:
-		ret.x = 1;
-		return ret;
+		*x += 1;
+		break;
 	case BLOCK_SURFACE_LEFT:
-		ret.x = -1;
-		return ret;
+		*x -= 1;
+		break;
 	case BLOCK_SURFACE_TOP:
-		ret.y = 1;
-		return ret;
+		*y += 1;
+		break;
 	case BLOCK_SURFACE_BOTTOM:
-		ret.y = -1;
-		return ret;
+		*y -= 1;
+		break;
 	case BLOCK_SURFACE_FRONT:
-		ret.z = 1;
-		return ret;
+		*z += 1;
+		break;
 	case BLOCK_SURFACE_BACK:
-		ret.z = -1;
-		return ret;
+		*z -= 1;
+		break;
+	default:
+		try(false);
 	}
-	try(false);
 }
 
-vec2size block_get_surface_texture_atlas_pos(
-	block_id block, 
-	block_surface_id surface) 
+typedef struct AtlasIndex AtlasIndex;
+struct AtlasIndex {
+	size_t x;
+	size_t y;
+};
+
+static AtlasIndex block_get_surface_texture_atlas_index(
+	block_id block,
+	block_surface_id surface)
 {
 	// TODO: Assign the textures to blocks.
-	return (vec2size){ 0, 0 };
+	return (AtlasIndex) { 0, 0 };
 }
 
 typedef uint32_t block_face_vertex;
 
-block_face_vertex create_block_face_vertex(
-	vec3size pos,
+static block_face_vertex block_face_vertex_init(
+	size_t x,
+	size_t y,
+	size_t z,
 	block_surface_id surface_id,
-	vec2size atlas_pos)
+	AtlasIndex atlas_index)
 {
-	try(pos.x < CHUNK_SIDELEN);
-	try(pos.y < CHUNK_SIDELEN);
-	try(pos.z < CHUNK_SIDELEN);
-	try(surface_id >= BLOCK_SURFACE_FIRST_ID &&
-		surface_id <= BLOCK_SURFACE_LAST_ID);
-	try(atlas_pos.x < ATLAS_X_LEN);
-	try(atlas_pos.y < ATLAS_Y_LEN);
+	try(x < CHUNK_SIDELEN);
+	try(y < CHUNK_SIDELEN);
+	try(z < CHUNK_SIDELEN);
+	try(surface_id >= BLOCK_SURFACE_FIRST_ID);
+	try(surface_id <= BLOCK_SURFACE_LAST_ID);
+	try(atlas_index.x < ATLAS_X_LEN);
+	try(atlas_index.y < ATLAS_Y_LEN);
 
 	return
-		((uint32_t)pos.x) |
-		(((uint32_t)pos.y) << 3) |
-		(((uint32_t)pos.z) << 6) |
+		((uint32_t)x) |
+		(((uint32_t)y) << 3) |
+		(((uint32_t)z) << 6) |
 		(((uint32_t)(
 			(surface_id == BLOCK_SURFACE_RIGHT) |
 			(surface_id == BLOCK_SURFACE_TOP) |
@@ -208,53 +124,221 @@ block_face_vertex create_block_face_vertex(
 		(((uint32_t)(
 			(surface_id == BLOCK_SURFACE_FRONT) |
 			(surface_id == BLOCK_SURFACE_BACK))) << 12) |
-		(((uint32_t)atlas_pos.x) << 13) |
-		(((uint32_t)atlas_pos.y) << 17);
+		(((uint32_t)atlas_index.x) << 13) |
+		(((uint32_t)atlas_index.y) << 17);
 }
 
-void chunk_area_generate_chunk_mesh(
-	ChunkArea* const area,
-	vec3i chunk_pos)
+typedef uint8_t chunk_generateion_state_id;
+
+#define CHUNK_GENERATION_STATE_NONE ((chunk_generateion_state_id)0)
+#define CHUNK_GENERATION_STATE_BLOCKS ((chunk_generateion_state_id)1)
+#define CHUNK_GENERATION_STATE_MESH ((chunk_generateion_state_id)2)
+
+#define CHUNK_GENERATION_STATE_FIRST_ID CHUNK_GENERATION_STATE_NONE;
+#define CHUNK_GENERATION_STATE_LAST_ID CHUNK_GENERATION_STATE_MESH;
+
+struct Chunk {
+	chunk_generateion_state_id generation_state;
+	// [x, y, z]
+	block_id blocks[CHUNK_SIDELEN * CHUNK_SIDELEN * CHUNK_SIDELEN];
+	gl_handle vao;
+};
+
+static Chunk chunk_init(void) {
+	Chunk chunk = {
+		.generation_state = CHUNK_GENERATION_STATE_NONE,
+	};
+	glGenVertexArrays(1, &chunk.vao);
+	return chunk;
+}
+
+static void chunk_deinit(Chunk* chunk) {
+	glDeleteVertexArrays(1, &chunk->vao);
+	chunk->vao = 0;
+}
+
+static size_t to_block_index(size_t x, size_t y, size_t z)
 {
-	Chunk* chunk = chunk_area_get_chunk_at(area, chunk_pos);
+	try(x < CHUNK_SIDELEN);
+	try(y < CHUNK_SIDELEN);
+	try(z < CHUNK_SIDELEN);
+
+	return 
+		x * CHUNK_SIDELEN * CHUNK_SIDELEN +
+		y * CHUNK_SIDELEN +
+		z;
+}
+
+static void chunk_generate_blocks(
+	const Perlin* perlin,
+	const FBM* heightmap_fmb,
+	Chunk* chunk,
+	int32_t chunk_x,
+	int32_t chunk_y,
+	int32_t chunk_z)
+{
+	for (int32_t x = 0; x < CHUNK_SIDELEN; x++) {
+		for (int32_t z = 0; z < CHUNK_SIDELEN; z++) {
+			int32_t height = (int32_t)fbm2(
+				perlin,
+				heightmap_fmb,
+				chunk_x * CHUNK_SIDELEN + x,
+				chunk_z * CHUNK_SIDELEN + z
+			);
+			for (int32_t y = 0; y < CHUNK_SIDELEN; y++) {
+				int32_t world_y = chunk_y * CHUNK_SIDELEN + y;
+				chunk->blocks[to_block_index(x, y, z)] = world_y > height ? BLOCK_AIR : BLOCK_STONE;
+			}
+		}
+	}
+}
+
+struct Chunks {
+	size_t sidelen;
+	Chunk values[];
+};
+
+Chunks* chunks_init(Arena* arena, size_t sidelen) {
+	try(sidelen != 0);
+	try(SIZE_MAX / sidelen / sidelen / sidelen >= 1);
+	size_t chunk_count = sidelen * sidelen * sidelen;
+	Chunks* chunks = arena_allocate(
+		arena,
+		sizeof(Chunks) + chunk_count * sizeof(Chunk),
+		_Alignof(Chunks)
+	);
+	for (size_t i = 0; i < chunk_count; i++) {
+		chunks->values[i] = chunk_init();
+	}
+	return chunks;
+}
+
+void chunks_deinit(Chunks* chunks) {
+	size_t sidelen = chunks->sidelen;
+	size_t chunk_count = sidelen * sidelen * sidelen;
+	for (size_t i = 0; i < chunk_count; i++) {
+		chunk_deinit(&chunks->values[i]);
+	}
+}
+
+static size_t to_chunk_index(size_t x, size_t y, size_t z, size_t sidelen) {
+	return
+		x * sidelen * sidelen +
+		y * sidelen +
+		z;
+}
+
+static inline Chunk* chunk_area_chunk_at(const ChunkArea* area, Chunks* chunks, int32_t x, int32_t y, int32_t z) {
+	try(x >= area->min_x);
+	try(y >= area->min_y);
+	try(z >= area->min_z);
+	size_t sidelen = chunks->sidelen;
+	try(x < area->min_x + sidelen);
+	try(y < area->min_y + sidelen);
+	try(z < area->min_z + sidelen);
+
+	return &chunks[to_chunk_index(
+		(size_t)(x - area->min_x),
+		(size_t)(x - area->min_y),
+		(size_t)(x - area->min_z),
+		sidelen)];
+}
+
+static void chunk_area_generate_chunk_mesh(
+	const ChunkArea* area,
+	Chunks* chunks,
+	int32_t chunk_x,
+	int32_t chunk_y,
+	int32_t chunk_z)
+{
+	Chunk* chunk = chunk_area_chunk_at(area, chunks, chunk_x, chunk_y, chunk_z);
 	block_face_vertex* vertices = NULL;
 	size_t vertices_count = 0;
 	size_t vertices_capacity = 0;
-	for (vec3size pos = { 0, 0, 0 }; pos.x < CHUNK_SIDELEN; pos.x++) {
-		for (pos.y = 0; pos.y < CHUNK_SIDELEN; pos.y++) {
-			for (pos.z = 0; pos.z < CHUNK_SIDELEN; pos.z++) {
-				block_id block = *chunk_block_at(chunk, pos);
+
+	for (size_t x = 0; x < CHUNK_SIDELEN; x++) {
+		for (size_t y = 0; y < CHUNK_SIDELEN; y++) {
+			for (size_t z = 0; z < CHUNK_SIDELEN; z++) {
+				block_id block = chunk->blocks[to_block_index(x, y, z)];
 				block_surface_culling_id from = 
 					block_get_block_surface_culling_strategy(block);
-				for (block_surface_id surface = BLOCK_SURFACE_FIRST_ID;
-					surface < BLOCK_SURFACE_LAST_ID;
-					surface++)
+				for (block_surface_id surface_id = BLOCK_SURFACE_FIRST_ID;
+					surface_id < BLOCK_SURFACE_LAST_ID;
+					surface_id++)
 				{
-					vec3i normal = block_surface_get_normal(surface);
-					vec3size adj = {
-						(size_t)(pos.x + normal.x),
-						(size_t)(pos.y + normal.y),
-						(size_t)(pos.z + normal.z),
-					};
-					if (adj.x < CHUNK_SIDELEN &&
-						adj.y < CHUNK_SIDELEN &&
-						adj.z < CHUNK_SIDELEN)
+					size_t adj_x = x;
+					size_t adj_y = y;
+					size_t adj_z = z;
+					block_surface_step_towards(surface_id, &adj_x, &adj_y, &adj_z);
+
+					if (adj_x < CHUNK_SIDELEN &&
+						adj_y < CHUNK_SIDELEN &&
+						adj_z < CHUNK_SIDELEN)
 					{
-						block_id adjacent_block = *chunk_block_at(chunk, adj);
+						block_id adj_block = chunk->blocks[to_block_index(adj_x, adj_y, adj_z)];
 						block_surface_culling_id to =
-							block_get_block_surface_culling_strategy(adjacent_block);
+							block_get_block_surface_culling_strategy(adj_block);
 						if (block_surface_culling_should_cull(from, to)) continue;
 					}
-					if (!(vertices_count < vertices_capacity)) {
+					if (vertices_count == vertices_capacity) {
 						vertices_capacity = vertices_capacity ? vertices_capacity * 2 : 1;
 						vertices = srealloc(vertices, vertices_capacity * sizeof(block_face_vertex));
 					}
-					vec2size atlas_pos = block_get_surface_texture_atlas_pos(block, surface);
-					vertices[vertices_count] = create_block_face_vertex(pos, surface, atlas_pos);
+					AtlasIndex atlas_index = block_get_surface_texture_atlas_index(block, surface_id);
+					vertices[vertices_count] = block_face_vertex_init(x, y, z, surface_id, atlas_index);
 				}
 			}
 		}
 	}
-	// TODO: Load the vertices into VBO, update the chunk's VAO.
+
+	gl_handle vbo;
+	glGenBuffers(1, &vbo);
+	glBindVertexArray(chunk->vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, vertices_count * sizeof(block_face_vertex), &vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 1, GL_UNSIGNED_INT, GL_FALSE, sizeof(block_face_vertex), (void*)0);
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(0);
+	glDeleteBuffers(1, &vbo);
+
 	sfree(vertices);
+}
+
+void chunk_area_generate_blocks(
+	const ChunkArea* area,
+	Chunks* chunks,
+	const Perlin* perlin, 
+	const FBM* heightmap_fbm) 
+{
+	size_t sidelen = chunks->sidelen;
+	for (int32_t x = area->min_x; x < area->min_x + sidelen; x++) {
+		for (int32_t y = area->min_y; y < area->min_y + sidelen; y++) {
+			for (int32_t z = area->min_z; z < area->min_z + sidelen; z++) {
+				Chunk* chunk = chunk_area_chunk_at(area, chunks, x, y, z);
+				if (chunk->generation_state != CHUNK_GENERATION_STATE_NONE) continue;
+				chunk_generate_blocks(
+					perlin, 
+					heightmap_fbm, 
+					chunk, 
+					x, 
+					y, 
+					z);
+				chunk->generation_state = CHUNK_GENERATION_STATE_BLOCKS;
+			}
+		}
+	}
+}
+
+void chunk_area_generate_meshes(const ChunkArea* area, Chunks* chunks) {
+	size_t sidelen = chunks->sidelen;
+	for (int32_t x = area->min_x; x < area->min_x + sidelen; x++) {
+		for (int32_t y = area->min_y; y < area->min_y + sidelen; y++) {
+			for (int32_t z = area->min_z; z < area->min_z + sidelen; z++) {
+				Chunk* chunk = chunk_area_chunk_at(area, chunks, x, y, z);
+				if (chunk->generation_state != CHUNK_GENERATION_STATE_BLOCKS) continue;
+				chunk_area_generate_chunk_mesh(area, chunks, x, y, z);
+				chunk->generation_state = CHUNK_GENERATION_STATE_MESH;
+			}
+		}
+	}
 }

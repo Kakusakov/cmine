@@ -44,8 +44,7 @@ static bool load_uncompressed_bmp_data(
 	Image* image,
 	size_t pixel_size,
 	bool flip_x,
-	bool flip_y,
-	Arena* arena) 
+	bool flip_y) 
 {
 	if (!image->width || !image->height || !pixel_size || !file) return false;
 
@@ -68,6 +67,13 @@ static bool load_uncompressed_bmp_data(
 	}
 
 	return true;
+}
+
+Image* iamge_init(Arena* arena, size_t width, size_t height) {
+	Image* image = arena_allocate(arena, sizeof(Image) + width * height, _Alignof(Image));
+	image->width = width;
+	image->height = height;
+	return image;
 }
 
 Image* image_try_from_bmp_file(FILE* file, Arena* arena) {
@@ -102,17 +108,13 @@ Image* image_try_from_bmp_file(FILE* file, Arena* arena) {
 		if (ih.compression != 0) return NULL;
 		if (ih.bit_count != 24 && ih.bit_count != 32) return NULL;
 
-		size_t buffer_size = width * height * byte_count;
-		Image* image = arena_allocate(arena, sizeof(Image) + buffer_size, _Alignof(Image));
-		image->width = width;
-		image->height = height;
+		Image* image = iamge_init(arena, width, height);
 		if (!load_uncompressed_bmp_data(
 			file,
 			image,
 			byte_count,
 			flip_x,
-			flip_y,
-			arena)) 
+			flip_y)) 
 		{
 			arena_reallocate(arena, 0, 0);
 			return NULL;
