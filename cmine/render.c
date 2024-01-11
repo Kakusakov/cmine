@@ -102,9 +102,9 @@ err0:
 }
 
 gl_handle load_shader_program(
-	char* vertext_shader_filename, 
-	char* fragment_shader_filename
-) {
+	const char* vertext_shader_filename, 
+	const char* fragment_shader_filename) 
+{
 	gl_handle vsh = load_shader(vertext_shader_filename, GL_VERTEX_SHADER);
 	if (!vsh) goto err0;
 	gl_handle fsh = load_shader(fragment_shader_filename, GL_FRAGMENT_SHADER);

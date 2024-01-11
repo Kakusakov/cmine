@@ -62,23 +62,17 @@ float32_t perlin3(const Perlin* perlin, float32_t x, float32_t y, float32_t z) {
 		lerp(v,
 			lerp(u, 
 				grad3(perlin->p[aa], x, y, z),
-				grad3(perlin->p[ba], x - 1.0f, y, z)
-			),
+				grad3(perlin->p[ba], x - 1.0f, y, z)),
 			lerp(u, 
 				grad3(perlin->p[ab], x, y - 1, z),
-				grad3(perlin->p[bb], x - 1.0f, y - 1.0f, z)
-			)
-		),
+				grad3(perlin->p[bb], x - 1.0f, y - 1.0f, z))),
 		lerp(v,
 			lerp(u, 
 				grad3(perlin->p[aa + 1], x, y, z - 1.0f),
-				grad3(perlin->p[ba + 1], x - 1.0f, y, z - 1.0f)
-			),
+				grad3(perlin->p[ba + 1], x - 1.0f, y, z - 1.0f)),
 			lerp(u, 
 				grad3(perlin->p[ab + 1], x, y - 1.0f, z - 1.0f),
-				grad3(perlin->p[bb + 1], x - 1.0f, y - 1.0f, z - 1.0f)
-			)
-		)
+				grad3(perlin->p[bb + 1], x - 1.0f, y - 1.0f, z - 1.0f)))
 	) + 1.0f) / 2.0f;
 }
 float32_t perlin2(const Perlin* perlin, float32_t x, float32_t y) {
@@ -118,8 +112,8 @@ float32_t fbm3(
 	const FBM* fbm,
 	float32_t x,
 	float32_t y,
-	float32_t z
-) {
+	float32_t z)
+{
 	float32_t result = 0.0f;
 	float32_t frequency = fbm->frequency;
 	float32_t intensity = fbm->intensity;
@@ -139,8 +133,8 @@ float32_t fbm2(
 	const Perlin* perlin,
 	const FBM* fbm,
 	float32_t x,
-	float32_t y
-) {
+	float32_t y)
+{
 	float32_t result = 0.0f;
 	float32_t frequency = fbm->frequency;
 	float32_t intensity = fbm->intensity;
@@ -158,8 +152,8 @@ float32_t fbm2(
 float32_t fbm1(
 	const Perlin* perlin,
 	const FBM* fbm,
-	float32_t x
-) {
+	float32_t x)
+{
 	float32_t result = 0.0f;
 	float32_t frequency = fbm->frequency;
 	float32_t intensity = fbm->intensity;

@@ -93,12 +93,12 @@ static void glfw_static_init(void) {
 	}
 }
 
-App* app_init(Arena* const arena) {
+App* app_init(void) {
 	glfw_static_init();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	App* const app = arena_alloc(arena, 1, App);
+	App* const app = smalloc(sizeof(App));
 	try((app->window = glfwCreateWindow(
 		800,
 		600,
@@ -110,9 +110,10 @@ App* app_init(Arena* const arena) {
 }
 void app_deinit(App* const app) {
 	glfwDestroyWindow(app->window);
+	sfree(app);
 }
 
-GLLoaderFunptr app_get_gl_loader(App* const app) {
+GLLoaderFunptr app_context_gl_loader(void) {
 	return (GLLoaderFunptr)glfwGetProcAddress;
 }
 void app_bind_current_context(App* const app) {

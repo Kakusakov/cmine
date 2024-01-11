@@ -45,10 +45,16 @@
     <ClCompile Include="app.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main_menu.c">
+    <ClCompile Include="main_menu_run.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="perlin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="app_run.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="world_run.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -80,7 +86,7 @@
     <ClInclude Include="arena.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="main_menu.h">
+    <ClInclude Include="main_menu_run.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="app.h">
@@ -105,6 +111,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mathf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="app_run.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="world_run.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mathi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
