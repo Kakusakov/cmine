@@ -133,6 +133,9 @@
     <Image Include="bg1.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="mc_atlas.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ui_vsh.glsl">

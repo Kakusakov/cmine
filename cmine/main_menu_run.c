@@ -9,6 +9,7 @@
 #include "glad.h"
 #include "app.h"
 
+typedef struct PerspectiveCamera PerspectiveCamera;
 struct PerspectiveCamera {
 	Vec3f pos;
 	Vec3f look;
@@ -16,14 +17,13 @@ struct PerspectiveCamera {
 	float32_t near;
 	float32_t far;
 };
-typedef struct PerspectiveCamera PerspectiveCamera;
 
+typedef struct MainMenu MainMenu;
 struct MainMenu {
 	float32_t last_frame_time;
 	PerspectiveCamera cam;
 	UISprite sprite;
 };
-typedef struct MainMenu MainMenu;
 
 static MainMenu create_main_menu(Input input) {
 	UISprite sprite = {0};
@@ -65,10 +65,10 @@ static void update_main_menu(MainMenu* self, Input input) {
 	float32_t delta = time - self->last_frame_time;
 
 	Vec3f dir = { 0, 0, 0 };
-	if (input.keys.is_w_pressed) dir = vec3f_forward();
-	if (input.keys.is_s_pressed) dir = vec3f_backward();
-	if (input.keys.is_a_pressed) dir = vec3f_right();
-	if (input.keys.is_d_pressed) dir = vec3f_left();
+	if (input.keys.is_w_pressed) dir = vec3f_add_v(dir, vec3f_forward());
+	if (input.keys.is_s_pressed) dir = vec3f_add_v(dir, vec3f_backward());
+	if (input.keys.is_a_pressed) dir = vec3f_add_v(dir, vec3f_right());
+	if (input.keys.is_d_pressed) dir = vec3f_add_v(dir, vec3f_left());
 
 	self->cam.pos.x += dir.x * delta;
 	self->cam.pos.y += dir.y * delta;
@@ -79,8 +79,8 @@ static void update_main_menu(MainMenu* self, Input input) {
 			mat4x4_matmul(
 				mat4x4_identity(),
 				mat4x4_look_at(
-					(Vec3f) { sinf(time), 0.0f, cosf(time) },
-					(Vec3f) { 0, 0, 0 },
+					(Vec3f){ sinf(time), 0.0f, cosf(time) },
+					(Vec3f){ 0, 0, 0 },
 					vec3f_up()
 				)
 			),
@@ -108,7 +108,7 @@ static void update_main_menu(MainMenu* self, Input input) {
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 
-	self->last_frame_time = (float)input.time.seconds;
+	self->last_frame_time = input.time.seconds;
 }
 
 void main_menu_run(App* app) {

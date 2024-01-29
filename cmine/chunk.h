@@ -86,7 +86,14 @@ typedef struct Chunk Chunk;
 struct Chunk {
 	chunk_generateion_stage_id generation_stage;
 	block_id blocks[CHUNK_SIDELEN * CHUNK_SIDELEN * CHUNK_SIDELEN];
+	size_t vertex_count;
 	gl_handle vao;
+};
+
+// A collection of adjacent chunks excluding the center chunk.
+typedef struct AdjacentChunks AdjacentChunks;
+struct AdjacentChunks {
+	Chunk items[6];  // Indexed with `block_surface_id`.
 };
 
 Chunk chunk_init(void); 
@@ -94,6 +101,10 @@ void chunk_deinit(Chunk* chunk);
 
 size_t to_chunk_block_index(Vec3i chunk_local);
 block_id* chunk_block_at(Chunk* chunk, Vec3i chunk_local);
+
+void chunk_generate_blocks(Chunk* chunk, const Perlin* perlin, const FBM* heightmap_noise, Vec3i world_min);
+void chunk_generate_mesh(Chunk* chunk, AdjacentChunks adjacent_chunks);
+void chunk_unload(Chunk* chunk);
 
 // Specifies the thansformation between the world's chunk coordinates and 
 // the internal coordinates used by `Chunks`.
@@ -111,7 +122,7 @@ struct Chunks {
 	Chunk values[];
 };
 
-Chunks* chunks_init(size_t sidelen);
+Chunks* chunks_init(Vec3i min, size_t sidelen);
 void chunks_deinit(Chunks* chunks);
 
 Vec3i chunk_world_to_area_local(Vec3i chunk_world, size_t sidelen, ChunkArea area);
@@ -122,18 +133,11 @@ Chunk* chunks_chunk_at_local(Chunks* chunks, Vec3i area_local);
 size_t chunk_world_to_chunks_index(Vec3i chunk_world, size_t sidelen, ChunkArea area);
 Chunk* chunks_chunk_at_world(Chunks* chunks, Vec3i chunk_world);
 
-bool chunks_generate_blocks_for_chunk(
-	Chunks* chunks,
-	const Perlin* perlin,
-	const FBM* heightmap_fmb,
-	Vec3i area_local
-);
-bool chunks_generate_mesh_for_chunk(
-	Chunks* chunks,
-	Vec3i area_local);
-
 void chunks_generate_blocks(
 	Chunks* chunks,
 	const Perlin* perlin,
 	const FBM* heightmap_fbm);
 void chunks_generate_mesh(Chunks* chunks);
+void chunks_generate_mesh(Chunks* chunks);
+
+// void chunks_move(Chunks* chunks, Vec3i delta);

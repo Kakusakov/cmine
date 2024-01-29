@@ -182,6 +182,9 @@
     <Image Include="bg1.bmp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </Image>
+    <Image Include="mc_atlas.bmp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </Image>
     <Image Include="test.bmp" />
     <Image Include="test2.bmp" />
   </ItemGroup>
