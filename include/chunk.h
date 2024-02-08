@@ -7,25 +7,23 @@
 // good support yet.
 
 typedef uint8_t block_id;
-
-#define BLOCK_UNKNOWN ((block_id)0)
-#define BLOCK_AIR ((block_id)1)
-#define BLOCK_STONE ((block_id)2)
-
-#define BLOCK_FIRST_ID BLOCK_UNKNOWN
-#define BLOCK_LAST_ID BLOCK_STONE
+enum {
+	block_unknown,
+	block_air,
+	block_stone,
+	block_count
+};
 
 typedef uint8_t block_surface_culling_id;
-
-// Surface never has a texure.
-#define BLOCK_SURFACE_CULLING_TRANSPARENT ((block_surface_culling_id)0)
-// Surface has a texture only if the adjacent surface is transparent.
-#define BLOCK_SURFACE_CULLING_SEMITRANSPARENT ((block_surface_culling_id)1)
-// Surface has a texture only if the adjacent surface is transparent or semitransparent.
-#define BLOCK_SURFACE_CULLING_SOLID ((block_surface_culling_id)2)
-
-#define BLOCK_SURFACE_CULLING_FIRST_ID BLOCK_SURFACE_CULLING_TRANSPARENT
-#define BLOCK_SURFACE_CULLING_LAST_ID BLOCK_SURFACE_CULLING_SOLID
+enum {
+	// Surface never has a texure.
+	block_surface_culling_transparent,
+	// Surface has a texture only if the adjacent surface is transparent.
+	block_surface_culling_semitransparent,
+	// Surface has a texture only if the adjacent surface is transparent or semitransparent.
+	block_surface_culling_solid,
+	block_surface_culling_count
+};
 
 block_surface_culling_id block_get_block_surface_culling_strategy(block_id block);
 bool block_surface_culling_should_cull(
@@ -33,16 +31,15 @@ bool block_surface_culling_should_cull(
 	block_surface_culling_id to);
 
 typedef uint8_t block_surface_id;
-
-#define BLOCK_SURFACE_RIGHT ((block_surface_id)0)
-#define BLOCK_SURFACE_LEFT ((block_surface_id)1)
-#define BLOCK_SURFACE_TOP ((block_surface_id)2)
-#define BLOCK_SURFACE_BOTTOM ((block_surface_id)3)
-#define BLOCK_SURFACE_FRONT ((block_surface_id)4)
-#define BLOCK_SURFACE_BACK ((block_surface_id)5)
-
-#define BLOCK_SURFACE_FIRST_ID BLOCK_SURFACE_RIGHT
-#define BLOCK_SURFACE_LAST_ID BLOCK_SURFACE_BACK
+enum {
+	block_surface_right,
+	block_surface_left,
+	block_surface_top,
+	block_surface_bottom,
+	block_surface_front,
+	block_surface_back,
+	block_surface_count
+};
 
 Vec3i block_surface_normal(block_surface_id surface_id);
 
@@ -73,13 +70,12 @@ block_face_vertex block_face_vertex_init(
 #define CHUNK_SIDELEN 8
 
 typedef uint8_t chunk_generateion_stage_id;
-
-#define CHUNK_GENERATION_STAGE_AWAITS_BLOCKS ((chunk_generateion_stage_id)0)
-#define CHUNK_GENERATION_STAGE_AWAITS_MESH ((chunk_generateion_stage_id)1)
-#define CHUNK_GENERATION_STAGE_READY ((chunk_generateion_stage_id)2)
-
-#define CHUNK_GENERATION_STAGE_FIRST_ID CHUNK_GENERATION_STAGE_AWAITS_BLOCKS;
-#define CHUNK_GENERATION_STAGE_LAST_ID CHUNK_GENERATION_STAGE_READY;
+enum {
+	chunk_generation_stage_awaits_blocks,
+	chunk_generation_stage_awaits_mesh,
+	chunk_generation_stage_ready,
+	chunk_generation_stage_count,
+};
 
 // A cubic collection of blocks.
 typedef struct Chunk Chunk;
@@ -93,7 +89,7 @@ struct Chunk {
 // A collection of adjacent chunks excluding the center chunk.
 typedef struct AdjacentChunks AdjacentChunks;
 struct AdjacentChunks {
-	Chunk items[6];  // Indexed with `block_surface_id`.
+	Chunk items[block_surface_count];
 };
 
 Chunk chunk_init(void); 

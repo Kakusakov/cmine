@@ -1,8 +1,6 @@
 #include "render.h"
 #include "glad.h"
-
 #include "safety.h"
-
 #include <stdio.h>
 
 static char* read_file(const char* filename) {
@@ -36,33 +34,34 @@ gl_handle load_shader(const char* filename, gl_enum shader_type) {
 	//printf("%s", source);
 	if (!source) goto err1;
 
-	glShaderSource(shader, 1, &source, NULL);
+	const char *const tmp = source;
+	glShaderSource(shader, 1, &tmp, NULL);
 	glCompileShader(shader);
 	int32_t success;
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+	sfree(source); 
 	if (!success) goto err2;
 
 	return shader;
 
-err2:
-	int32_t size;
-	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &size);
-	char* log = smalloc(size);
-	glGetShaderInfoLog(shader, size, NULL, log);
-	fprintf(
-		stderr,
-		"\nCaught runtime error:\n"
-		"\tOpenGL failed to compile a shader.\n"
-		"\tShader type = `0x%x`\n"
-		"\tShader filename = `%s`\n"
-		"\tInfo log = `%s`\n"
-		"\tResuming...",
-		shader_type,
-		filename,
-		log
-	);
-
-	sfree(source);
+err2: 
+	{
+		int32_t size = 0;
+		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &size);
+		char* log = smalloc(size);
+		glGetShaderInfoLog(shader, size, NULL, log);
+		fprintf(
+			stderr,
+			"\nCaught runtime error:\n"
+			"\tOpenGL failed to compile a shader.\n"
+			"\tShader type = `0x%x`\n"
+			"\tShader filename = `%s`\n"
+			"\tInfo log = `%s`\n"
+			"\tResuming...",
+			shader_type,
+			filename,
+			log);
+	}
 err1:
 	glDeleteShader(shader);
 err0:
@@ -82,20 +81,20 @@ gl_handle link_shader_program(gl_handle vertext_shader, gl_handle fragment_shade
 
 	return prog;
 
-err1:
-	int32_t size;
-	glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &size);
-	char* log = smalloc(size);
-	glGetProgramInfoLog(prog, size, NULL, log);
-	fprintf(
-		stderr,
-		"\nCaught runtime error:\n"
-		"\tOpenGL failed to link a shader program.\n"
-		"\tInfo log = `%s`\n"
-		"\tResuming...",
-		log
-	);
-
+err1: 
+	{
+		int32_t size = 0;
+		glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &size);
+		char* log = smalloc(size);
+		glGetProgramInfoLog(prog, size, NULL, log);
+		fprintf(
+			stderr,
+			"\nCaught runtime error:\n"
+			"\tOpenGL failed to link a shader program.\n"
+			"\tInfo log = `%s`\n"
+			"\tResuming...",
+			log);
+	}
 	glDeleteProgram(prog);
 err0:
 	return 0;

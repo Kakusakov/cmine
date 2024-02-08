@@ -95,6 +95,8 @@ static void GLAPIENTRY gl_message_callback(
 }
 
 void setup_gl_error_callback(void) {
+	if (GLVersion.major < 4 || 
+		(GLVersion.major == 4 && GLVersion.minor < 4)) return;
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(gl_message_callback, NULL);
 }

@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <limits.h>
+#include <stddef.h>
 
 typedef float float32_t;
 typedef double float64_t;

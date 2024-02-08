@@ -5,22 +5,21 @@
 
 #include <stdio.h>
 
+typedef struct Color Color;
 PACK(struct Color {
 	uint8_t red;
 	uint8_t green;
 	uint8_t blue;
 	uint8_t alpha;
 });
-typedef struct Color Color;
 
+typedef struct Image Image;
 struct Image {
 	size_t width;
 	size_t height;
 	Color pixels[];
 };
-typedef struct Image Image;
 
-Image* iamge_init(Arena* arena, size_t width, size_t height);
 Image* image_try_from_bmp_file(FILE* file, Arena* arena);
 Image* image_load_bmp(const char* filename, Arena* arena);
 

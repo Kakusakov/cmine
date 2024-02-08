@@ -1,23 +1,24 @@
 #include "chunk.h"
-#include "mathf.h"
+#include "mathi.h"
 #include "safety.h"
 #include "glad.h"
 
 block_surface_culling_id block_get_block_surface_culling_strategy(block_id block) {
 	switch (block) {
-	case BLOCK_UNKNOWN:
-		return BLOCK_SURFACE_CULLING_TRANSPARENT;
-	case BLOCK_AIR:
-		return BLOCK_SURFACE_CULLING_TRANSPARENT;
-	case BLOCK_STONE:
-		return BLOCK_SURFACE_CULLING_SOLID;
+	case block_unknown:
+		return block_surface_culling_transparent;
+	case block_air:
+		return block_surface_culling_transparent;
+	case block_stone:
+		return block_surface_culling_solid;
+	default:
+		try(false);
 	}
-	try(false);
 }
 
 bool block_surface_culling_should_cull(
 	block_surface_culling_id from,
-	block_surface_culling_id to)
+	block_surface_culling_id to) 
 {
 	return from <= to;
 }
@@ -27,22 +28,22 @@ Vec3i block_surface_normal(
 {
 	Vec3i normal = { 0, 0, 0 };
 	switch (surface_id) {
-	case BLOCK_SURFACE_RIGHT:
+	case block_surface_right:
 		normal.x += 1;
 		break;
-	case BLOCK_SURFACE_LEFT:
+	case block_surface_left:
 		normal.x -= 1;
 		break;
-	case BLOCK_SURFACE_TOP:
+	case block_surface_top:
 		normal.y += 1;
 		break;
-	case BLOCK_SURFACE_BOTTOM:
+	case block_surface_bottom:
 		normal.y -= 1;
 		break;
-	case BLOCK_SURFACE_FRONT:
+	case block_surface_front:
 		normal.z += 1;
 		break;
-	case BLOCK_SURFACE_BACK:
+	case block_surface_back:
 		normal.z -= 1;
 		break;
 	default:
@@ -56,14 +57,15 @@ AtlasIndex block_get_surface_texture_atlas_index(
 	block_surface_id surface)
 {
 	switch (block) {
-	case BLOCK_UNKNOWN:
+	case block_unknown:
 		return (AtlasIndex){0, 0};
-	case BLOCK_AIR:
+	case block_air:
 		return (AtlasIndex){0, 0};
-	case BLOCK_STONE:
+	case block_stone:
 		return (AtlasIndex){0, 1};
+	default:
+		try(false);
 	}
-	try(false);
 }
 
 block_face_vertex block_face_vertex_init(
@@ -76,8 +78,7 @@ block_face_vertex block_face_vertex_init(
 	try(x < CHUNK_SIDELEN);
 	try(y < CHUNK_SIDELEN);
 	try(z < CHUNK_SIDELEN);
-	try(surface_id >= BLOCK_SURFACE_FIRST_ID);
-	try(surface_id <= BLOCK_SURFACE_LAST_ID);
+	try(surface_id <= block_surface_count);
 	try(atlas_index.x < ATLAS_X_LEN);
 	try(atlas_index.y < ATLAS_Y_LEN);
 
@@ -86,25 +87,25 @@ block_face_vertex block_face_vertex_init(
 		(((uint32_t)y) << 3) |
 		(((uint32_t)z) << 6) |
 		(((uint32_t)(
-			(surface_id == BLOCK_SURFACE_RIGHT) |
-			(surface_id == BLOCK_SURFACE_TOP) |
-			(surface_id == BLOCK_SURFACE_FRONT))) << 9) |
+			(surface_id == block_surface_right) |
+			(surface_id == block_surface_top) |
+			(surface_id == block_surface_front))) << 9) |
 		(((uint32_t)(
-			(surface_id == BLOCK_SURFACE_RIGHT) |
-			(surface_id == BLOCK_SURFACE_LEFT))) << 10) |
+			(surface_id == block_surface_right) |
+			(surface_id == block_surface_left))) << 10) |
 		(((uint32_t)(
-			(surface_id == BLOCK_SURFACE_TOP) |
-			(surface_id == BLOCK_SURFACE_BOTTOM))) << 11) |
+			(surface_id == block_surface_top) |
+			(surface_id == block_surface_bottom))) << 11) |
 		(((uint32_t)(
-			(surface_id == BLOCK_SURFACE_FRONT) |
-			(surface_id == BLOCK_SURFACE_BACK))) << 12) |
+			(surface_id == block_surface_front) |
+			(surface_id == block_surface_back))) << 12) |
 		(((uint32_t)atlas_index.x) << 13) |
 		(((uint32_t)atlas_index.y) << 17);
 }
 
 Chunk chunk_init(void) {
 	Chunk chunk = {
-		.generation_stage = CHUNK_GENERATION_STAGE_AWAITS_BLOCKS,
+		.generation_stage = 0,
 		.vertex_count = 0,
 	};
 	glGenVertexArrays(1, &chunk.vao);
@@ -160,7 +161,7 @@ void chunks_deinit(Chunks* chunks) {
 }
 
 void chunk_generate_blocks(Chunk* chunk, const Perlin* perlin, const FBM* heightmap_noise, Vec3i world_min) {
-	if (chunk->generation_stage != CHUNK_GENERATION_STAGE_AWAITS_BLOCKS) return;
+	if (chunk->generation_stage != chunk_generation_stage_awaits_blocks) return;
 	for (int32_t x = 0; x < CHUNK_SIDELEN; x++) {
 		for (int32_t z = 0; z < CHUNK_SIDELEN; z++) {
 			int32_t height = (int32_t)fbm2(
@@ -171,7 +172,7 @@ void chunk_generate_blocks(Chunk* chunk, const Perlin* perlin, const FBM* height
 			);
 			for (int32_t y = 0; y < CHUNK_SIDELEN; y++) {
 				int32_t world_y = world_min.y + y;
-				chunk->blocks[to_chunk_block_index((Vec3i) { x, y, z })] = world_y > height ? BLOCK_AIR : BLOCK_STONE;
+				chunk->blocks[to_chunk_block_index((Vec3i) { x, y, z })] = world_y > height ? block_air : block_stone;
 			}
 		}
 	}
@@ -179,7 +180,7 @@ void chunk_generate_blocks(Chunk* chunk, const Perlin* perlin, const FBM* height
 }
 
 void chunk_generate_mesh(Chunk* chunk, AdjacentChunks adjacent_chunks) {
-	if (chunk->generation_stage != CHUNK_GENERATION_STAGE_AWAITS_MESH) return;
+	if (chunk->generation_stage != chunk_generation_stage_awaits_mesh) return;
 
 	block_face_vertex* vertices = NULL;
 	size_t vertices_count = 0;
@@ -192,8 +193,8 @@ void chunk_generate_mesh(Chunk* chunk, AdjacentChunks adjacent_chunks) {
 				block_id block = chunk->blocks[to_chunk_block_index(pos)];
 				block_surface_culling_id from =
 					block_get_block_surface_culling_strategy(block);
-				for (block_surface_id surface_id = BLOCK_SURFACE_FIRST_ID;
-					surface_id < BLOCK_SURFACE_LAST_ID;
+				for (block_surface_id surface_id = 0;
+					surface_id < block_surface_count;
 					surface_id++)
 				{
 
@@ -235,18 +236,18 @@ void chunk_generate_mesh(Chunk* chunk, AdjacentChunks adjacent_chunks) {
 
 void chunk_unload(Chunk* chunk) {
 	switch (chunk->generation_stage) {
-	case CHUNK_GENERATION_STAGE_READY:
+	case chunk_generation_stage_ready:
 		glBindVertexArray(chunk->vao);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 		chunk->vertex_count = 0;
-	case CHUNK_GENERATION_STAGE_AWAITS_MESH:
-	case CHUNK_GENERATION_STAGE_AWAITS_BLOCKS:
+	case chunk_generation_stage_awaits_mesh:
+	case chunk_generation_stage_awaits_blocks:
 		break;
 	default:
 		try(false);
 	}
-	chunk->generation_stage = CHUNK_GENERATION_STAGE_AWAITS_BLOCKS;
+	chunk->generation_stage = 0;
 }
 
 Vec3i chunk_world_to_area_local(Vec3i chunk_world, size_t sidelen, ChunkArea area) {

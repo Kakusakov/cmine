@@ -1,11 +1,9 @@
-#include "app_run.h"
-
 #include "main_menu_run.h"
 #include "safety.h"
 #include "gl_error.h"
 #include "glad.h"
 
-void app_run(void) {
+int main(void) {
 	App* app = app_init();
 	app_bind_current_context(app);
 	try(gladLoadGLLoader(app_context_gl_loader()));
@@ -18,4 +16,5 @@ void app_run(void) {
 
 	app_unbind_current_context();
 	app_deinit(app);
+	return 0;
 }

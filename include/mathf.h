@@ -1,14 +1,15 @@
 #pragma once
-#include "fixed_types.h"
-#define _USE_MATH_DEFINES
 #include <math.h>
+#include "fixed_types.h"
 #include "safety.h"
 
+#define PI 3.14159265358979323846
+
 static inline float32_t to_radians(const float32_t degrees) {
-	return degrees * (float32_t)M_PI / (float32_t)180.0;
+	return degrees * (float32_t)PI / (float32_t)180.0;
 }
 static inline float32_t to_degrees(const float32_t radians) {
-	return radians * (float32_t)180.0 / (float32_t)M_PI;
+	return radians * (float32_t)180.0 / (float32_t)PI;
 }
 
 typedef struct Vec3f Vec3f;

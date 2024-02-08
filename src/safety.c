@@ -38,7 +38,7 @@ void sfree(void* block) {
 	free(block);
 }
 
-void satexit(void (__cdecl *callback)(void)) {
+void satexit(void (*callback)(void)) {
 	if (atexit(callback)) sexit(1);
 }
 void sexit(int error_code) {

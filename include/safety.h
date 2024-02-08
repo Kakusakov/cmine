@@ -8,5 +8,5 @@ void _stry_fail(const char* expression, const char* filename, unsigned line_numb
 void* smalloc(size_t size);
 void* srealloc(void* block, size_t size);
 void sfree(void* block);
-void satexit(void (__cdecl *callback)(void));
+void satexit(void (*callback)(void));
 void sexit(int error_code);

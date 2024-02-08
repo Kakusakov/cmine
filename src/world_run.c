@@ -15,14 +15,14 @@ void world_run(App* app) {
 		.persistance = 1,
 		.lacunarity = 1,
 	};
-	chunk_generate_blocks(&chunk, perlin, &fbm, (Vec3i){0});
-	chunk_generate_mesh(&chunk, (AdjacentChunks){0});
+	chunk_generate_blocks(chunk, perlin, &fbm, (Vec3i){0});
+	chunk_generate_mesh(chunk, (AdjacentChunks){0});
 
 	app_update(app);
 	while (!app_should_close(app)) {
 		// TODO: Draw chunk...
 		app_update(app);
 	}
-	chunk_deinit(&chunk);
+	chunk_deinit(chunk);
 	arena_deinit(arena);
 }

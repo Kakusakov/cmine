@@ -1,10 +1,10 @@
 #include "main_menu_run.h"
 
+#include "safety.h"
+#include "arena.h"
 #include "mathf.h"
 #include "sprite.h"
-#include "safety.h"
 #include "render.h"
-#include "arena.h"
 #include "gl_error.h"
 #include "glad.h"
 #include "app.h"

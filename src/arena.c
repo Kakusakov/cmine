@@ -1,5 +1,4 @@
 #include "arena.h"
-
 #include "safety.h"
 
 #include <string.h>
@@ -177,7 +176,7 @@ void* arena_reallocate(Arena* const arena, const size_t size, const size_t align
 			arena_fetch_current(arena, size);
 		}
 
-		try(!memcpy_s(&arena->current->data, arena->current->size, tmp_data, tmp_size));
+		memcpy(&arena->current->data, tmp_data, tmp_size);
 		return &arena->current->data;
 	}
 

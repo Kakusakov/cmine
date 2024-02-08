@@ -1,9 +1,7 @@
 #include "sprite.h"
-
 #include "image.h"
-#include "glad.h"
 #include "safety.h"
-
+#include "glad.h"
 #include <stdlib.h>
 
 gl_handle load_pixel_texture(const char* filename) {

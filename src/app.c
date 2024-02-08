@@ -94,18 +94,31 @@ static void glfw_static_init(void) {
 }
 
 App* app_init(void) {
+	App* const app = smalloc(sizeof(App));
 	glfw_static_init();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	App* const app = smalloc(sizeof(App));
-	try((app->window = glfwCreateWindow(
+	app->window = glfwCreateWindow(
 		800,
 		600,
 		"test window",
 		NULL,
 		NULL
-	)));
+	);
+	if (!app->window) {
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		try((app->window = glfwCreateWindow(
+			800,
+			600,
+			"test window",
+			NULL,
+			NULL
+		)));
+	}
+
 	return app;
 }
 void app_deinit(App* const app) {

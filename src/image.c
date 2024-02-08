@@ -2,7 +2,7 @@
 #include "safety.h"
 
 #include <string.h>
-#include <math.h>
+#include <stdlib.h>  // Why in the world is abs() located at stdlib.h and not at math.h???
 
 PACK(struct BmpFileHeader {
 	uint8_t signature[2];
@@ -30,7 +30,7 @@ static const uint8_t bmp_signature[2] = { 'B', 'M' };
 
 static Color color_from_bgra(uint32_t bgra_color) {
 	Color temp = {0};
-	memcpy_s(&temp, sizeof(temp), &bgra_color, sizeof(bgra_color));
+	memcpy(&temp, &bgra_color, sizeof(bgra_color));
 	return (Color) {
 		.red = temp.blue,
 		.green = temp.green,
@@ -69,8 +69,8 @@ static bool load_uncompressed_bmp_data(
 	return true;
 }
 
-Image* iamge_init(Arena* arena, size_t width, size_t height) {
-	Image* image = arena_allocate(arena, sizeof(Image) + width * height, _Alignof(Image));
+static Image* image_init(Arena* arena, size_t width, size_t height) {
+	Image* image = arena_allocate(arena, sizeof(Image) + width * height * sizeof(Color), _Alignof(Image));
 	image->width = width;
 	image->height = height;
 	return image;
@@ -108,7 +108,7 @@ Image* image_try_from_bmp_file(FILE* file, Arena* arena) {
 		if (ih.compression != 0) return NULL;
 		if (ih.bit_count != 24 && ih.bit_count != 32) return NULL;
 
-		Image* image = iamge_init(arena, width, height);
+		Image* image = image_init(arena, width, height);
 		if (!load_uncompressed_bmp_data(
 			file,
 			image,
