@@ -1,148 +1,174 @@
 #include "app.h"
-#include "safety.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <stddef.h>
 
-static char* glfw_error_code_name(int error_code) {
+static GLFWwindow* window;
+
+static const char *glfw_error_code_name(int error_code) 
+{
 	switch (error_code) {
-	case GLFW_NO_ERROR:
-		return "GLFW_NO_ERROR";
-	case GLFW_NOT_INITIALIZED:
-		return "GLFW_NOT_INITIALIZED";
-	case GLFW_NO_CURRENT_CONTEXT:
-		return "GLFW_NO_CURRENT_CONTEXT";
-	case GLFW_INVALID_ENUM:
-		return "GLFW_INVALID_ENUM";
-	case GLFW_INVALID_VALUE:
-		return "GLFW_INVALID_VALUE";
-	case GLFW_OUT_OF_MEMORY:
-		return "GLFW_OUT_OF_MEMORY";
-	case GLFW_API_UNAVAILABLE:
-		return "GLFW_API_UNAVAILABLE";
-	case GLFW_VERSION_UNAVAILABLE:
-		return "GLFW_VERSION_UNAVAILABLE";
-	case GLFW_PLATFORM_ERROR:
-		return "GLFW_PLATFORM_ERROR";
-	case GLFW_FORMAT_UNAVAILABLE:
-		return "GLFW_FORMAT_UNAVAILABLE";
-	case GLFW_NO_WINDOW_CONTEXT:
-		return "GLFW_NO_WINDOW_CONTEXT";
-	default:
-		return "[unknown glfw error code]";
+	case GLFW_NO_ERROR:            return "GLFW_NO_ERROR";
+	case GLFW_NOT_INITIALIZED:     return "GLFW_NOT_INITIALIZED";
+	case GLFW_NO_CURRENT_CONTEXT:  return "GLFW_NO_CURRENT_CONTEXT";
+	case GLFW_INVALID_ENUM:        return "GLFW_INVALID_ENUM";
+	case GLFW_INVALID_VALUE:       return "GLFW_INVALID_VALUE";
+	case GLFW_OUT_OF_MEMORY:       return "GLFW_OUT_OF_MEMORY";
+	case GLFW_API_UNAVAILABLE:     return "GLFW_API_UNAVAILABLE";
+	case GLFW_VERSION_UNAVAILABLE: return "GLFW_VERSION_UNAVAILABLE";
+	case GLFW_PLATFORM_ERROR:      return "GLFW_PLATFORM_ERROR";
+	case GLFW_FORMAT_UNAVAILABLE:  return "GLFW_FORMAT_UNAVAILABLE";
+	case GLFW_NO_WINDOW_CONTEXT:   return "GLFW_NO_WINDOW_CONTEXT";
+	default:                       return "[unknown glfw error code]";
 	}
 }
-
-static void glfw_error_callback(int error_code, const char* description) {
+static void glfw_error_callback(int error_code, const char* description) 
+{
 	fprintf(
 		stderr,
 		"\nCaught runtime error:\n"
 		"\tGlfw invoked the error callback.\n"
 		"\tError code = `%s (0x%x)`\n"
-		"\tDescription = `%s`\n"
-		"\tResuming...\n",
+		"\tDescription = `%s`\n",
 		glfw_error_code_name(error_code),
 		error_code,
-		description
-	);
+		description);
+	// TODO: should this exit?
 }
-
-static void setup_glfw_error_callback(void) {
+int app_init(void)
+{
+	if (window) return 1;
 	glfwSetErrorCallback(glfw_error_callback);
-}
-
-struct App {
-	GLFWwindow* window;
-	Input input;
-	bool should_close;
-};
-
-static void update_input(App* app) {
-	glfwPollEvents();
-
-	// Update window input.
-	glfwGetFramebufferSize(app->window, &app->input.window.width, &app->input.window.height);
-
-	// Update cursor input.
-	glfwGetCursorPos(app->window, &app->input.cursor.x, &app->input.cursor.y);
-	app->input.cursor.is_inside_window = glfwGetWindowAttrib(app->window, GLFW_HOVERED);
-
-	// Update time input.
-	app->input.time.seconds = glfwGetTime();
-
-	// Update key input.
-	app->input.keys.is_lmb_pressed = glfwGetMouseButton(app->window, GLFW_MOUSE_BUTTON_LEFT);
-	app->input.keys.is_rmb_pressed = glfwGetMouseButton(app->window, GLFW_MOUSE_BUTTON_RIGHT);
-
-	app->input.keys.is_w_pressed = glfwGetKey(app->window, GLFW_KEY_W);
-	app->input.keys.is_a_pressed = glfwGetKey(app->window, GLFW_KEY_A);
-	app->input.keys.is_s_pressed = glfwGetKey(app->window, GLFW_KEY_S);
-	app->input.keys.is_d_pressed = glfwGetKey(app->window, GLFW_KEY_D);
-}
-
-static void glfw_deinit(void) {
-	glfwTerminate();
-}
-
-static void glfw_static_init(void) {
-	static bool is_initialized = false;
-	if (!is_initialized) {
-		setup_glfw_error_callback();
-		satexit(glfw_deinit);
-		try(glfwInit());
-		is_initialized = true;
+	if (!glfwInit()) 
+	{
+		fprintf(stderr, "Failed to initialize GLFW.\n");
+		return 0;
 	}
-}
 
-App* app_init(void) {
-	App* const app = smalloc(sizeof(App));
-	glfw_static_init();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	app->window = glfwCreateWindow(
-		800,
-		600,
-		"test window",
-		NULL,
-		NULL
-	);
-	if (!app->window) {
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	// Will try to load with OpenGL 4.4 environment, but
+	// resorts to using OpenGL 3.3 otherwise.
+	for (int version = 4; version >= 3; version--)
+	{
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, version);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, version);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-		try((app->window = glfwCreateWindow(
+		window = glfwCreateWindow(
 			800,
 			600,
 			"test window",
 			NULL,
 			NULL
-		)));
+		);
+		if (!window) continue;
+		glfwMakeContextCurrent(window);
+		return 1;
 	}
-
-	return app;
+	fprintf(stderr, "Failed to create a window capable of at least OpenGL 3.3.\n");
+	glfwTerminate();
+	return 0;
 }
-void app_deinit(App* const app) {
-	glfwDestroyWindow(app->window);
-	sfree(app);
-}
-
-GLLoaderFunptr app_context_gl_loader(void) {
-	return (GLLoaderFunptr)glfwGetProcAddress;
-}
-void app_bind_current_context(App* const app) {
-	glfwMakeContextCurrent(app->window);
-}
-void app_unbind_current_context(void) {
+void app_deinit(void)
+{
+	if (!window) return;
 	glfwMakeContextCurrent(NULL);
+	glfwDestroyWindow(window);
+	window = NULL;
+	glfwTerminate();
 }
-void app_update(App* const app) {
-	glfwSwapBuffers(app->window);
-	update_input(app);
-	app->should_close = (bool)glfwWindowShouldClose(app->window);
+
+void app_swap_buffers(void)
+{
+	assert(window);
+	glfwSwapBuffers(window);
 }
-bool app_should_close(const App* const app) {
-	return app->should_close;
+void app_update(void)
+{
+	assert(window);
+	glfwPollEvents();
 }
-Input app_input(const App* const app) {
-	return app->input;
+int app_should_close(void)
+{
+	assert(window);
+	return glfwWindowShouldClose(window);
+}
+
+GLLoaderFunPtr app_context_gl_loader(void)
+{
+	assert(window);
+	return (GLLoaderFunPtr)glfwGetProcAddress;
+}
+
+float app_time(void)
+{
+	assert(window);
+	return (float)glfwGetTime();
+}
+int app_window_width(void)
+{
+    int width;
+    glfwGetWindowSize(window, &width, NULL);
+    return width;
+}
+int app_window_height(void)
+{
+    int height;
+    glfwGetWindowSize(window, NULL, &height);
+    return height;
+}
+int app_is_mouse_pressed(int button)
+{
+	assert(window);
+	int glfw_button;
+	switch(button)
+	{
+		case app_mouse_button_left:   glfw_button = GLFW_MOUSE_BUTTON_LEFT;   break;
+		case app_mouse_button_right:  glfw_button = GLFW_MOUSE_BUTTON_RIGHT;  break;
+		case app_mouse_button_middle: glfw_button = GLFW_MOUSE_BUTTON_MIDDLE; break;
+		default: return 0;
+	}
+	return glfwGetMouseButton(window, glfw_button);
+}
+int app_is_key_pressed(int key)
+{
+	assert(window);
+	int glfw_key;
+	switch(key)
+	{
+		case app_key_w: glfw_key = GLFW_KEY_W; break;
+		case app_key_a: glfw_key = GLFW_KEY_A; break;
+		case app_key_s: glfw_key = GLFW_KEY_S; break;
+		case app_key_d: glfw_key = GLFW_KEY_D; break;
+		default: return 0;
+	}
+	return glfwGetKey(window, glfw_key) == GLFW_PRESS;
+}
+float app_cursor_position_x(void)
+{
+	assert(window);
+	double x;
+	glfwGetCursorPos(window, &x, NULL);
+	return (float)x;
+}
+float app_cursor_position_y(void)
+{
+	assert(window);
+	double y;
+	glfwGetCursorPos(window, NULL, &y);
+	return (float)y;
+}
+int app_is_cursor_hovered(void)
+{
+	assert(window);
+	return glfwGetWindowAttrib(window, GLFW_HOVERED);
+}
+
+void app_hide_cursor(void)
+{
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+}
+void app_show_cursor(void)
+{
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }

@@ -1,56 +1,86 @@
 #include "perlin.h"
 #include <stdlib.h>
+#include <stddef.h>
+#include <float.h>
 
-struct Perlin {
-	uint8_t p[512];
+// Be careful, type of Perlin::p depends on ARRAY_SIZE.
+#define ARRAY_SIZE 256
+
+struct Perlin 
+{
+	uint8_t p[ARRAY_SIZE * 2];
 };
 
-static inline float32_t fade(float32_t t) {
+static inline float fade(float t)
+{
 	return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
 }
-static inline float32_t lerp(float32_t t, float32_t a, float32_t b) {
+static inline float lerp(float t, float a, float b)
+{
 	return a + t * (b - a);
 }
-static inline float32_t grad3(uint8_t hash, float32_t x, float32_t y, float32_t z) {
+static inline float grad3(uint8_t hash, float x, float y, float z)
+{
 	uint8_t h = hash & 15;
-	float32_t u = h < 8 ? x : y;
-	float32_t v = h < 4 ? y : (h == 12 || h == 14 ? x : z);
+	float u = h < 8 ? x : y;
+	float v = h < 4 ? y : (h == 12 || h == 14 ? x : z);
 	return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
 }
-static inline float32_t grad2(uint8_t hash, float32_t x, float32_t y) {
+static inline float grad2(uint8_t hash, float x, float y)
+{
 	return ((hash & 1) == 0 ? x : -x) + ((hash & 2) == 0 ? y : -y);
 }
-static inline float32_t grad1(uint8_t hash, float32_t x) {
+static inline float grad1(uint8_t hash, float x)
+{
 	return ((hash & 1) == 0 ? x : -x);
 }
 
-Perlin* perlin_from_stdrand(Arena* arena, unsigned rand_seed) {
-	Perlin* seed = arena_alloc(arena, 1, Perlin);
-	for (size_t i = 0; i < 256; i++) {
-		seed->p[i] = i;
-	}
-	srand(rand_seed);
-	for (size_t i = 0; i < 255; i++) {
-		size_t j = i + rand() / (RAND_MAX / (256 - i) + 1);
-		uint8_t temp = seed->p[j];
-		seed->p[j] = seed->p[i];
-		seed->p[i] = temp;
-	}
-	for (size_t i = 0; i < 256; i++) {
-		seed->p[i + 256] = seed->p[i];
-	}
-	return seed;
+static uint32_t hash_u32(uint32_t u)
+{
+	u = (u ^ 61) ^ (u >> 16);
+	u = u + (u << 3);
+	u = u ^ (u >> 4);
+	u = u * 0x27d4eb2d;
+	u = u ^ (u >> 15);
+	return u;
 }
-float32_t perlin3(const Perlin* perlin, float32_t x, float32_t y, float32_t z) {
-	size_t xi = ((int32_t)x) & 255;
-	size_t yi = ((int32_t)y) & 255;
-	size_t zi = ((int32_t)z) & 255;
-	x = x - ((int32_t)x);
-	y = y - ((int32_t)y);
-	z = z - ((int32_t)z);
-	float32_t u = fade(x);
-	float32_t v = fade(y);
-	float32_t w = fade(z);
+
+Perlin *perlin_init(uint32_t seed)
+{
+	Perlin *perlin = malloc(sizeof(Perlin));
+	if (perlin == NULL) return NULL;
+
+	for (size_t i = 0; i < ARRAY_SIZE; i++) {
+		perlin->p[i] = (uint8_t)i;
+	}
+
+	for (size_t i = 0; i < ARRAY_SIZE; i++) {
+		seed = hash_u32(seed);
+		size_t j = i + seed / (UINT32_MAX / (ARRAY_SIZE - i) + 1);  // ???
+		uint8_t temp = perlin->p[j];
+		perlin->p[j] = perlin->p[i];
+		perlin->p[i] = temp;
+	}
+	for (size_t i = 0; i < ARRAY_SIZE; i++) {
+		perlin->p[i + ARRAY_SIZE] = perlin->p[i];
+	}
+	return perlin;
+}
+
+float perlin3(const Perlin *perlin, float x, float y, float z)
+{
+	x = (x / 2.12345f) + ((float)FLT_MAX / 2);
+	y = (y / 2.12345f) + ((float)FLT_MAX / 2);
+	z = (z / 2.12345f) + ((float)FLT_MAX / 2);
+	size_t xi = ((size_t)x) & ARRAY_SIZE;
+	size_t yi = ((size_t)y) & ARRAY_SIZE;
+	size_t zi = ((size_t)z) & ARRAY_SIZE;
+	x = x - ((size_t)x);
+	y = y - ((size_t)y);
+	z = z - ((size_t)z);
+	float u = fade(x);
+	float v = fade(y);
+	float w = fade(z);
 	size_t a = perlin->p[xi] + yi;
 	size_t b = perlin->p[xi + 1] + yi;
 	size_t aa = perlin->p[a] + zi;
@@ -75,13 +105,16 @@ float32_t perlin3(const Perlin* perlin, float32_t x, float32_t y, float32_t z) {
 				grad3(perlin->p[bb + 1], x - 1.0f, y - 1.0f, z - 1.0f)))
 	) + 1.0f) / 2.0f;
 }
-float32_t perlin2(const Perlin* perlin, float32_t x, float32_t y) {
-	size_t xi = ((int32_t)x) & 255;
-	size_t yi = ((int32_t)y) & 255;
-	x = x - (int32_t)x;
-	y = y - (int32_t)y;
-	float32_t u = fade(x);
-	float32_t v = fade(y);
+float perlin2(const Perlin *perlin, float x, float y)
+{
+	x = (x / 2.12345f) + ((float)FLT_MAX / 2);
+	y = (y / 2.12345f) + ((float)FLT_MAX / 2);
+	size_t xi = ((size_t)x) & ARRAY_SIZE;
+	size_t yi = ((size_t)y) & ARRAY_SIZE;
+	x = x - (size_t)x;
+	y = y - (size_t)y;
+	float u = fade(x);
+	float v = fade(y);
 	size_t a = perlin->p[xi] + yi;
 	size_t b = perlin->p[xi + 1] + yi;
 
@@ -96,10 +129,12 @@ float32_t perlin2(const Perlin* perlin, float32_t x, float32_t y) {
 		)
 	) + 1.0f) / 2.0f;
 }
-float32_t perlin1(const Perlin* perlin, float32_t x) {
-	size_t xi = ((int32_t)x) & 255;
-	x = x - ((float32_t)(int32_t)x);
-	float32_t u = fade(x);
+float perlin1(const Perlin *perlin, float x)
+{
+	x = (x / 2.12345f) + ((float)FLT_MAX / 2);
+	size_t xi = ((size_t)x) & ARRAY_SIZE;
+	x = x - ((size_t)x);
+	float u = fade(x);
 	
 	return (lerp(u, 
 		grad1(perlin->p[xi], x), 
@@ -107,63 +142,60 @@ float32_t perlin1(const Perlin* perlin, float32_t x) {
 	) + 1.0f) / 2.0f;
 }
 
-float32_t fbm3(
-	const Perlin* perlin,
-	const FBM* fbm,
-	float32_t x,
-	float32_t y,
-	float32_t z)
+float fbm3(
+	const Perlin *perlin,
+	Fbm fbm,
+	float x, float y, float z)
 {
-	float32_t result = 0.0f;
-	float32_t frequency = fbm->frequency;
-	float32_t intensity = fbm->intensity;
-	for (uint8_t octave = 0; octave < fbm->octave_count; octave++) {
+	float result = 0.0f;
+	float frequency = fbm.frequency;
+	float intensity = fbm.intensity;
+	for (int octave = 0; octave < fbm.octave_count; octave++) {
 		result += perlin3(
 			perlin, 
 			x * frequency,
 			y * frequency,
 			z * frequency
 		) * intensity;
-		frequency *= fbm->lacunarity;
-		intensity *= fbm->persistance;
+		frequency *= fbm.lacunarity;
+		intensity *= fbm.persistance;
 	}
 	return result;
 }
-float32_t fbm2(
-	const Perlin* perlin,
-	const FBM* fbm,
-	float32_t x,
-	float32_t y)
+float fbm2(
+	const Perlin *perlin,
+	Fbm fbm,
+	float x, float y)
 {
-	float32_t result = 0.0f;
-	float32_t frequency = fbm->frequency;
-	float32_t intensity = fbm->intensity;
-	for (uint8_t octave = 0; octave < fbm->octave_count; octave++) {
+	float result = 0.0f;
+	float frequency = fbm.frequency;
+	float intensity = fbm.intensity;
+	for (int octave = 0; octave < fbm.octave_count; octave++) {
 		result += perlin2(
 			perlin,
 			x * frequency,
 			y * frequency
 		) * intensity;
-		frequency *= fbm->lacunarity;
-		intensity *= fbm->persistance;
+		frequency *= fbm.lacunarity;
+		intensity *= fbm.persistance;
 	}
 	return result;
 }
-float32_t fbm1(
-	const Perlin* perlin,
-	const FBM* fbm,
-	float32_t x)
+float fbm1(
+	const Perlin *perlin,
+	Fbm fbm,
+	float x)
 {
-	float32_t result = 0.0f;
-	float32_t frequency = fbm->frequency;
-	float32_t intensity = fbm->intensity;
-	for (uint8_t octave = 0; octave < fbm->octave_count; octave++) {
+	float result = 0.0f;
+	float frequency = fbm.frequency;
+	float intensity = fbm.intensity;
+	for (int octave = 0; octave < fbm.octave_count; octave++) {
 		result += perlin1(
 			perlin,
 			x * frequency
 		) * intensity;
-		frequency *= fbm->lacunarity;
-		intensity *= fbm->persistance;
+		frequency *= fbm.lacunarity;
+		intensity *= fbm.persistance;
 	}
 	return result;
 }

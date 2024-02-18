@@ -1,191 +1,167 @@
 #pragma once
 #include <math.h>
-#include "fixed_types.h"
-#include "safety.h"
+
+static inline int mod(int a, int b) {
+	int result = a % b;
+	return result >= 0 ? result : result + b;
+}
 
 #define PI 3.14159265358979323846
+#define DEG_TO_RAD (PI / 180.0)
+#define RAD_TO_DEG (180.0 / PI)
 
-static inline float32_t to_radians(const float32_t degrees) {
-	return degrees * (float32_t)PI / (float32_t)180.0;
-}
-static inline float32_t to_degrees(const float32_t radians) {
-	return radians * (float32_t)180.0 / (float32_t)PI;
-}
-
-typedef struct Vec3f Vec3f;
-struct Vec3f {
-	float32_t x;
-	float32_t y;
-	float32_t z;
+typedef struct Vec2f Vec2f;
+struct Vec2f
+{
+	float x;
+	float y;
 };
 
-static inline Vec3f vec3f_add_v(Vec3f a, Vec3f b) {
-	return (Vec3f) { a.x + b.x, a.y + b.y, a.z + b.z };
-}
-static inline Vec3f vec3f_sub_v(Vec3f a, Vec3f b) {
-	return (Vec3f) { a.x - b.x, a.y - b.y, a.z - b.z };
-}
-static inline Vec3f vec3f_mul_v(Vec3f a, Vec3f b) {
-	return (Vec3f) { a.x * b.x, a.y * b.y, a.z * b.z };
-}
-static inline Vec3f vec3f_div_v(Vec3f a, Vec3f b) {
-	try(b.x != 0.0f && b.y != 0.0f && b.z != 0.0f);
-	return (Vec3f) { a.x / b.x, a.y / b.y, a.z / b.z };
-}
+typedef struct Vec3f Vec3f;
+struct Vec3f
+{
+	float x;
+	float y;
+	float z;
+};
 
-static inline Vec3f vec3f_add(Vec3f a, float32_t value) {
-	return (Vec3f) { a.x + value, a.y + value, a.z + value };
-}
-static inline Vec3f vec3f_sub(Vec3f a, float32_t value) {
-	return (Vec3f) { a.x - value, a.y - value, a.z - value };
-}
-static inline Vec3f vec3f_mul(Vec3f a, float32_t value) {
-	return (Vec3f) { a.x * value, a.y * value, a.z * value };
-}
-static inline Vec3f vec3f_div(Vec3f a, float32_t value) {
-	try(value != 0.0f);
-	return (Vec3f) { a.x / value, a.y / value, a.z / value };
-}
+typedef struct Vec2f Vec2f;
+struct Vec2i
+{
+	int x;
+	int y;
+};
 
-static inline float32_t vec3f_dot(Vec3f a, Vec3f b) {
+typedef struct Vec3i Vec3i;
+struct Vec3i
+{
+	int x;
+	int y;
+	int z;
+};
+
+static inline float vec3f_dot(Vec3f a, Vec3f b)
+{
 	return a.x * b.x + a.y * b.y + a.z * b.z;
 }
-static inline Vec3f vec3f_cross(Vec3f a, Vec3f b) {
-	return (Vec3f) {
-		a.y* b.z - a.z * b.y,
-			a.z* b.x - a.x * b.z,
-			a.x* b.y - a.y * b.x,
+
+static inline Vec3f vec3f_cross(Vec3f a, Vec3f b)
+{
+	return (Vec3f){
+		.x = a.y * b.z - a.z * b.y,
+		.y = a.z * b.x - a.x * b.z,
+		.z = a.x * b.y - a.y * b.x,
 	};
 }
 
-static inline float32_t vec3f_sqrlen(Vec3f vec) {
-	return vec.x * vec.x + vec.y * vec.y + vec.z * vec.z;
-}
-static inline float32_t vec3f_len(Vec3f vec) {
-	return sqrtf(vec3f_sqrlen(vec));
-}
-static inline Vec3f vec3f_neg(Vec3f vec) {
-	return (Vec3f) { -vec.x, -vec.y, -vec.z };
-}
-static inline Vec3f vec3f_normalize(Vec3f vec) {
-	return vec3f_div(vec, vec3f_len(vec));
+static inline float vec3f_sqrlen(Vec3f a)
+{
+	return vec3f_dot(a, a);
 }
 
-static inline Vec3f vec3f_splat(float32_t value) {
-	return (Vec3f) { value, value, value };
-}
-static inline Vec3f vec3f_right(void) {
-	return (Vec3f) { 1.0f, 0.0f, 0.0f };
-}
-static inline Vec3f vec3f_up(void) {
-	return (Vec3f) { 0.0f, 1.0f, 0.0f };
-}
-static inline Vec3f vec3f_forward(void) {
-	return (Vec3f) { 0.0f, 0.0f, 1.0f };
-}
-static inline Vec3f vec3f_left(void) {
-	return vec3f_neg(vec3f_right());
-}
-static inline Vec3f vec3f_down(void) {
-	return vec3f_neg(vec3f_up());
-}
-static inline Vec3f vec3f_backward(void) {
-	return vec3f_neg(vec3f_forward());
+static inline float vec3f_len(Vec3f a)
+{
+	return sqrtf(vec3f_sqrlen(a));
 }
 
-typedef struct Mat4x4 Mat4x4;
-struct Mat4x4 {
-	float32_t v[4 * 4];
+static inline Vec3f vec3f_normalize(Vec3f a)
+{
+	float len = vec3f_len(a);
+	if (len == 0) return (Vec3f){0};
+	return (Vec3f){
+		.x = a.x / len,
+		.y = a.y / len,
+		.z = a.z / len,
+	};
+}
+
+typedef struct Mat Mat;
+struct Mat {
+	float v[4 * 4];
 };
 
-static inline Mat4x4 mat4x4_matmul(Mat4x4 rows, Mat4x4 cols) {
-	Mat4x4 mat;
-	for (size_t y = 0; y < 4; y++) {
-		for (size_t x = 0; x < 4; x++) {
-			float32_t dot = 0.0f;
-			for (size_t i = 0; i < 4; i++) {
-				dot += rows.v[y * 4 + i] * cols.v[i * 4 + x];
-			}
-			mat.v[y * 4 + x] = dot;
+#define MAT_IDX(x, y) (y * 4 + x)
+#define MAT_IDX_V(v) MAT_IDX(v.x, v.y)
+
+static inline Mat matmul(Mat rows, Mat cols) {
+	Mat mat;
+	for (int y = 0; y < 4; y++) {
+		for (int x = 0; x < 4; x++) {
+			mat.v[MAT_IDX(x, y)] =
+				rows.v[MAT_IDX(0, y)] * cols.v[MAT_IDX(x, 0)] +
+				rows.v[MAT_IDX(1, y)] * cols.v[MAT_IDX(x, 1)] +
+				rows.v[MAT_IDX(2, y)] * cols.v[MAT_IDX(x, 2)] +
+				rows.v[MAT_IDX(3, y)] * cols.v[MAT_IDX(x, 3)];
 		}
 	}
 	return mat;
 }
 
-static inline Mat4x4 mat4x4_null(void) {
-	return (Mat4x4) { 0 };
+#define MAT_IDENTITY ((Mat){  \
+	1.0f, 0.0f, 0.0f, 0.0f,   \
+	0.0f, 1.0f, 0.0f, 0.0f,   \
+	0.0f, 0.0f, 1.0f, 0.0f,   \
+	0.0f, 0.0f, 0.0f, 1.0f,   \
+})
+
+static inline Mat mat_translate(Mat mat, Vec3f translate) {
+	Mat m = MAT_IDENTITY;
+	m.v[MAT_IDX(0, 3)] = translate.x;
+	m.v[MAT_IDX(1, 3)] = translate.y;
+	m.v[MAT_IDX(2, 3)] = translate.z;
+	return matmul(mat, m);
 }
 
-static inline Mat4x4 mat4x4_identity(void) {
-	Mat4x4 mat = mat4x4_null();
-	for (size_t i = 0; i < 4; i++) {
-		mat.v[i * 4 + i] = 1.0f;
-	}
-	return mat;
+static inline Mat mat_scale(Mat mat, Vec3f scale) {
+	Mat m = MAT_IDENTITY;
+	m.v[MAT_IDX(1, 1)] = scale.x;
+	m.v[MAT_IDX(2, 2)] = scale.y;
+	m.v[MAT_IDX(3, 3)] = scale.z;
+	return matmul(mat, m);
 }
 
-static inline Mat4x4 mat4x4_translate(Vec3f translate) {
-	Mat4x4 mat = mat4x4_identity();
-	mat.v[12] = translate.x;
-	mat.v[13] = translate.y;
-	mat.v[14] = translate.z;
-	return mat;
-}
-
-static inline Mat4x4 mat4x4_scale(Vec3f scale) {
-	Mat4x4 mat = mat4x4_identity();
-	mat.v[4 * 0 + 0] = scale.x;
-	mat.v[4 * 1 + 1] = scale.y;
-	mat.v[4 * 2 + 2] = scale.z;
-	return mat;
-}
-
-static inline Mat4x4 mat4x4_ortho(
-	float32_t left,
-	float32_t right,
-	float32_t bottom,
-	float32_t top,
-	float32_t near,
-	float32_t far)
+static inline Mat mat_ortho(
+	Mat mat,
+	float left,   float right,
+	float bottom, float top, 
+	float near,   float far)
 {
-	Mat4x4 mat = mat4x4_null();
+	Mat m = {0};
+	m.v[MAT_IDX(0, 0)] = 2.0f / (left - right);
+	m.v[MAT_IDX(1, 1)] = 2.0f / (bottom - top);
+	m.v[MAT_IDX(2, 2)] = -2.0f / (far - near);
 
-	mat.v[0 * 4 + 0] = 2.0f / (left - right);
-	mat.v[1 * 4 + 1] = 2.0f / (bottom - top);
-	mat.v[2 * 4 + 2] = -2.0f / (far - near);
-
-	mat.v[3 * 4 + 0] = -(left + right) / (left - right);
-	mat.v[3 * 4 + 1] = -(bottom + top) / (bottom - top);
-	mat.v[3 * 4 + 2] = -(far + near) / (far - near);
-	mat.v[3 * 4 + 3] = 1.0f;
-
-	return mat;
+	m.v[MAT_IDX(0, 3)] = -(left + right) / (left - right);
+	m.v[MAT_IDX(1, 3)] = -(bottom + top) / (bottom - top);
+	m.v[MAT_IDX(2, 3)] = -(far + near) / (far - near);
+	m.v[MAT_IDX(3, 3)] = 1.0f;
+	return matmul(mat, m);
 }
 
-static inline Mat4x4 mat4x4_perspective(
-	float32_t aspect,
-	float32_t fov_y,
-	float32_t near,
-	float32_t far)
+static inline Mat mat_perspective(
+	Mat mat,
+	float aspect, float fov_y,
+	float near,   float far)
 {
-	Mat4x4 mat = mat4x4_null();
-	float32_t f = 1.0f / tanf(fov_y / 2.0f);
+	Mat m = {0};
+	float f = 1.0f / tanf(fov_y / 2.0f);
+	
+	m.v[MAT_IDX(0, 0)] = f / aspect;
+	m.v[MAT_IDX(1, 1)] = f;
+	m.v[MAT_IDX(2, 2)] = (far + near) / (near - far);
 
-	mat.v[4 * 0 + 0] = f / aspect;
-	mat.v[4 * 1 + 1] = f;
-	mat.v[4 * 2 + 2] = (far + near) / (near - far);
-	mat.v[4 * 2 + 3] = -1.0f;
-	mat.v[4 * 3 + 2] = (2.0f * far * near) / (near - far);
-
-	return mat;
+	m.v[MAT_IDX(3, 2)] = -1.0f;
+	m.v[MAT_IDX(2, 3)] = (2.0f * far * near) / (near - far);
+	return matmul(mat, m);
 }
 
-static inline Mat4x4 mat4x4_look_at(
+static inline Mat mat_look_at(
+	Mat mat,
 	Vec3f from,
 	Vec3f to,
 	Vec3f up)
 {
-	Mat4x4 mat = mat4x4_null();
+	Mat m = {0};
 	Vec3f delta = {
 		to.x - from.x,
 		to.y - from.y,
@@ -195,24 +171,23 @@ static inline Mat4x4 mat4x4_look_at(
 	Vec3f axis_x = vec3f_normalize(vec3f_cross(up, axis_z));
 	Vec3f axis_y = vec3f_cross(axis_z, axis_x);
 
-	mat.v[0] = axis_x.x;
-	mat.v[1] = axis_y.x;
-	mat.v[2] = axis_z.x;
+	m.v[MAT_IDX(0, 0)] = axis_x.x;
+	m.v[MAT_IDX(1, 0)] = axis_y.x;
+	m.v[MAT_IDX(2, 0)] = axis_z.x;
 
-	mat.v[4] = axis_x.y;
-	mat.v[5] = axis_y.y;
-	mat.v[6] = axis_z.y;
+	m.v[MAT_IDX(0, 1)] = axis_x.y;
+	m.v[MAT_IDX(1, 1)] = axis_y.y;
+	m.v[MAT_IDX(2, 1)] = axis_z.y;
 
-	mat.v[8] = axis_x.z;
-	mat.v[9] = axis_y.z;
-	mat.v[10] = axis_z.z;
+	m.v[MAT_IDX(0, 2)] = axis_x.z;
+	m.v[MAT_IDX(1, 2)] = axis_y.z;
+	m.v[MAT_IDX(2, 2)] = axis_z.z;
 
-	mat.v[12] = vec3f_dot(axis_x, from);
-	mat.v[13] = vec3f_dot(axis_y, from);
-	mat.v[14] = vec3f_dot(axis_z, from);
-	mat.v[15] = 1.0f;
-
-	return mat;
+	m.v[MAT_IDX(0, 3)] = vec3f_dot(axis_x, from);
+	m.v[MAT_IDX(1, 3)] = vec3f_dot(axis_y, from);
+	m.v[MAT_IDX(2, 3)] = vec3f_dot(axis_z, from);
+	m.v[MAT_IDX(3, 3)] = 1.0f;
+	return matmul(mat, m);
 }
 
 //static inline Vec4f vec4f_plane(const Vec3f point, const Vec3f normal) {

@@ -1,42 +1,38 @@
 #pragma once
-#include "fixed_types.h"
-#include "arena.h"
+#include <stdint.h>
 
 // A seed for Perlin nose generatoin.
 typedef struct Perlin Perlin;
 
-Perlin* perlin_from_stdrand(Arena* arena, unsigned rand_seed);
+Perlin *perlin_init(uint32_t seed);
 
-float32_t perlin3(const Perlin* perlin, float32_t x, float32_t y, float32_t z);
-float32_t perlin2(const Perlin* perlin, float32_t x, float32_t y);
-float32_t perlin1(const Perlin* perlin, float32_t x);
+float perlin3(const Perlin *perlin, float x, float y, float z);
+float perlin2(const Perlin *perlin, float x, float y);
+float perlin1(const Perlin *perlin, float x);
 
 // Settings for noise generation with the fractional Brownian motion algorithm.
-typedef struct FBM FBM;
-struct FBM {
-	uint8_t octave_count;
-	float32_t frequency;
-	float32_t intensity;
-	float32_t lacunarity;
-	float32_t persistance;
+typedef struct Fbm Fbm;
+struct Fbm
+{
+	int octave_count;
+	float frequency;
+	float intensity;
+	float lacunarity;
+	float persistance;
 };
 
-float32_t fbm3(
-	const Perlin* seed,
-	const FBM* fbm,
-	float32_t x,
-	float32_t y,
-	float32_t z
-);
-float32_t fbm2(
-	const Perlin* seed,
-	const FBM* fbm,
-	float32_t x,
-	float32_t y
-);
-
-float32_t fbm1(
-	const Perlin* seed,
-	const FBM* fbm,
-	float32_t x
-);
+float fbm3(
+	const Perlin *seed,
+	Fbm fbm,
+	float x,
+	float y,
+	float z);
+float fbm2(
+	const Perlin *seed,
+	Fbm fbm,
+	float x,
+	float y);
+float fbm1(
+	const Perlin *seed,
+	Fbm fbm,
+	float x);
