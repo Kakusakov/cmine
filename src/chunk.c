@@ -25,12 +25,12 @@ BlockPosition block_face_normal(BlockFace face)
 {
 	BlockPosition normal = {0};
 	switch (face) {
-	case block_face_right:  normal.x += 1; break;
-	case block_face_left:   normal.x -= 1; break;
-	case block_face_top:    normal.y += 1; break;
-	case block_face_bottom: normal.y -= 1; break;
-	case block_face_front:  normal.z += 1; break;
-	case block_face_back:   normal.z -= 1; break;
+	case block_face_front:  normal.x += 1; break;
+	case block_face_back:   normal.x -= 1; break;
+	case block_face_right:  normal.y += 1; break;
+	case block_face_left:   normal.y -= 1; break;
+	case block_face_top:    normal.z += 1; break;
+	case block_face_bottom: normal.z -= 1; break;
 	default: ASSERT(0); break;
 	}
 	return normal;
@@ -108,19 +108,19 @@ void chunk_generate_blocks(
 	ASSERT(chunk->generation_stage == chunk_generation_stage_awaits_blocks);
 	for (int x = 0; x < CHUNK_SIDELEN; x++)
 	{
-		for (int z = 0; z < CHUNK_SIDELEN; z++)
+		for (int y = 0; y < CHUNK_SIDELEN; y++)
 		{
 			float noise = fbm2(
 				perlin,
 				heightmap_fbm,
 				(float)(world_min.x + x),
-				(float)(world_min.z + z));
+				(float)(world_min.y + y));
 			ASSERT(noise > INT_MIN && noise < INT_MAX);  // Check for world boundaries.
 			int height = (int)noise;
-			for (int y = 0; y < CHUNK_SIDELEN; y++)
+			for (int z = 0; z < CHUNK_SIDELEN; z++)
 			{
-				int world_y = world_min.y + y;
-				chunk->blocks[CHUNK_BLOCK_IDX(x, y, z)] = (world_y > height) ? block_air : block_stone;
+				int world_z = world_min.z + z;
+				chunk->blocks[CHUNK_BLOCK_IDX(x, y, z)] = (world_z > height) ? block_air : block_stone;
 			}
 		}
 	}

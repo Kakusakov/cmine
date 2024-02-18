@@ -54,12 +54,12 @@ int should_cull_face(BlockFaceCulling from, BlockFaceCulling to);
 typedef enum BlockFace BlockFace;
 enum BlockFace 
 {
+	block_face_front,
+	block_face_back,
 	block_face_right,
 	block_face_left,
 	block_face_top,
 	block_face_bottom,
-	block_face_front,
-	block_face_back,
 	block_face_count
 };
 
@@ -98,7 +98,7 @@ struct Chunk
 	GLuint vao;
 };
 
-#define CHUNK_BLOCK_IDX(x, y, z) (x * CHUNK_SIDELEN * CHUNK_SIDELEN + y * CHUNK_SIDELEN + z)
+#define CHUNK_BLOCK_IDX(x, y, z) (z * CHUNK_SIDELEN * CHUNK_SIDELEN + y * CHUNK_SIDELEN + x)
 #define CHUNK_BLOCK_IDX_V(v) CHUNK_BLOCK_IDX(v.x, v.y, v.z)
 
 Chunk chunk_init(void);
@@ -140,7 +140,7 @@ struct Chunks
 	Chunk *items;
 };
 
-#define CHUNKS_CHUNK_IDX(x, y, z, sidelen) (x * sidelen * sidelen + y * sidelen + z)
+#define CHUNKS_CHUNK_IDX(x, y, z, sidelen) (z * sidelen * sidelen + y * sidelen + x)
 #define CHUNKS_CHUNK_IDX_V(v, sidelen) CHUNKS_CHUNK_IDX(v.x, v.y, v.z, sidelen)
 
 int chunks_init(Chunks* chunks, ChunkPosition min, size_t sidelen);

@@ -38,19 +38,19 @@ enum
 };
 // Returns the time in seconds since the start of an app.
 float app_time(void);
-// Return the current width of the window in pixels.
+// Returns the current width of the window in pixels.
 int app_window_width(void);
-// Return the current height of the window in pixels.
+// Returns the current height of the window in pixels.
 int app_window_height(void);
-// Return whether a certain mouse buttion is pressed.
+// Returns whether a certain mouse buttion is pressed.
 int app_is_mouse_pressed(int button);
-// Return whether a certain key is pressed.
+// Returns whether a certain key is pressed.
 int app_is_key_pressed(int key);
 // Returns the x postion of a cursor relative to the top-left widnow corner.
 float app_cursor_position_x(void);
 // Returns the x postion of a cursor relative to the top-left widnow corner.
 float app_cursor_position_y(void);
-// Return wheter the cursor is hovering over window.
+// Returns wheter the cursor is hovering over window.
 int app_is_cursor_hovered(void);
 
 // Makes the cursor invisible.
