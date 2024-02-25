@@ -63,6 +63,7 @@ int app_init(void)
 		);
 		if (!window) continue;
 		glfwMakeContextCurrent(window);
+		
 		return 1;
 	}
 	fprintf(stderr, "Failed to create a window capable of at least OpenGL 3.3.\n");
@@ -117,29 +118,61 @@ int app_window_height(void)
     glfwGetWindowSize(window, NULL, &height);
     return height;
 }
-int app_is_mouse_pressed(int button)
+int app_is_window_focused(void)
 {
-	assert(window);
-	int glfw_button;
-	switch(button)
-	{
-		case app_mouse_button_left:   glfw_button = GLFW_MOUSE_BUTTON_LEFT;   break;
-		case app_mouse_button_right:  glfw_button = GLFW_MOUSE_BUTTON_RIGHT;  break;
-		case app_mouse_button_middle: glfw_button = GLFW_MOUSE_BUTTON_MIDDLE; break;
-		default: return 0;
-	}
-	return glfwGetMouseButton(window, glfw_button);
+	return glfwGetWindowAttrib(window, GLFW_FOCUSED);
 }
 int app_is_key_pressed(int key)
 {
 	assert(window);
+	if (key < 0) return 0;
+	if (key < app_key_a)
+	{
+		int glfw_mouse_button;
+		switch (key)
+		{
+		case app_key_mouse_left:   glfw_mouse_button = GLFW_MOUSE_BUTTON_LEFT;   break;
+		case app_key_mouse_right:  glfw_mouse_button = GLFW_MOUSE_BUTTON_RIGHT;  break;
+		case app_key_mouse_middle: glfw_mouse_button = GLFW_MOUSE_BUTTON_MIDDLE; break;
+		default: assert(0);
+		}
+		return glfwGetMouseButton(window, glfw_mouse_button) == GLFW_PRESS;
+	}
+
 	int glfw_key;
 	switch(key)
 	{
-		case app_key_w: glfw_key = GLFW_KEY_W; break;
 		case app_key_a: glfw_key = GLFW_KEY_A; break;
-		case app_key_s: glfw_key = GLFW_KEY_S; break;
+		case app_key_b: glfw_key = GLFW_KEY_B; break;
+		case app_key_c: glfw_key = GLFW_KEY_C; break;
 		case app_key_d: glfw_key = GLFW_KEY_D; break;
+		case app_key_e: glfw_key = GLFW_KEY_E; break;
+		case app_key_f: glfw_key = GLFW_KEY_F; break;
+		case app_key_g: glfw_key = GLFW_KEY_G; break;
+		case app_key_h: glfw_key = GLFW_KEY_H; break;
+		case app_key_i: glfw_key = GLFW_KEY_I; break;
+		case app_key_j: glfw_key = GLFW_KEY_J; break;
+		case app_key_k: glfw_key = GLFW_KEY_K; break;
+		case app_key_l: glfw_key = GLFW_KEY_L; break;
+		case app_key_m: glfw_key = GLFW_KEY_M; break;
+		case app_key_n: glfw_key = GLFW_KEY_N; break;
+		case app_key_o: glfw_key = GLFW_KEY_O; break;
+		case app_key_p: glfw_key = GLFW_KEY_P; break;
+		case app_key_q: glfw_key = GLFW_KEY_Q; break;
+		case app_key_r: glfw_key = GLFW_KEY_R; break;
+		case app_key_s: glfw_key = GLFW_KEY_S; break;
+		case app_key_t: glfw_key = GLFW_KEY_T; break;
+		case app_key_u: glfw_key = GLFW_KEY_U; break;
+		case app_key_v: glfw_key = GLFW_KEY_V; break;
+		case app_key_w: glfw_key = GLFW_KEY_W; break;
+		case app_key_x: glfw_key = GLFW_KEY_X; break;
+		case app_key_y: glfw_key = GLFW_KEY_Y; break;
+		case app_key_z: glfw_key = GLFW_KEY_Z; break;
+		case app_key_tilde: glfw_key = GLFW_KEY_GRAVE_ACCENT; break;
+		case app_key_esc:   glfw_key = GLFW_KEY_ESCAPE; break;
+		case app_key_space: glfw_key = GLFW_KEY_SPACE; break;
+		case app_key_left_shift: glfw_key = GLFW_KEY_LEFT_SHIFT; break;
+		case app_key_tab: glfw_key = GLFW_KEY_TAB; break;
 		default: return 0;
 	}
 	return glfwGetKey(window, glfw_key) == GLFW_PRESS;
@@ -164,11 +197,21 @@ int app_is_cursor_hovered(void)
 	return glfwGetWindowAttrib(window, GLFW_HOVERED);
 }
 
+int app_is_cursor_hidden(void)
+{
+	return glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
+}
 void app_hide_cursor(void)
 {
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	if (glfwRawMouseMotionSupported())
+	{
+		glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+	}
 }
 void app_show_cursor(void)
 {
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+
 }

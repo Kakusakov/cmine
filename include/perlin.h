@@ -1,10 +1,17 @@
 #pragma once
 #include <stdint.h>
 
+// Be careful, type of Perlin::p depends on PERLIN_ARRAY_SIZE.
+#define PERLIN_ARRAY_SIZE 256
+
 // A seed for Perlin nose generatoin.
 typedef struct Perlin Perlin;
+struct Perlin
+{
+	uint8_t p[PERLIN_ARRAY_SIZE * 2];
+};
 
-Perlin *perlin_init(uint32_t seed);
+void perlin_init(Perlin *perlin, uint32_t seed);
 
 float perlin3(const Perlin *perlin, float x, float y, float z);
 float perlin2(const Perlin *perlin, float x, float y);

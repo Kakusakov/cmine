@@ -69,7 +69,7 @@ BlockPosition block_face_normal(BlockFace face);
 
 // Index inside of a texture atlas.
 typedef struct AtlasIndex AtlasIndex;
-struct AtlasIndex 
+struct AtlasIndex
 {
 	size_t x;
 	size_t y;
@@ -90,7 +90,7 @@ enum ChunkGenerationStage
 
 // A cubic collection of blocks.
 typedef struct Chunk Chunk;
-struct Chunk 
+struct Chunk
 {
 	Block blocks[CHUNK_SIDELEN * CHUNK_SIDELEN * CHUNK_SIDELEN];
 	ChunkGenerationStage generation_stage;
@@ -118,13 +118,14 @@ struct AdjacentChunks
 };
 
 void chunk_generate_mesh(
-	Chunk *chunk, 
+	Chunk *chunk,
 	AdjacentChunks adjacent_chunks);
 void chunk_unload(Chunk *chunk);
+void draw_chunk(const Chunk* chunk, Mat transform, GLuint texture);
 
 // Specifies the thansformation between the world's chunk coordinates and 
 // the internal coordinates used by `Chunks`.
-typedef struct ChunkArea ChunkArea;
+/*typedef struct ChunkArea ChunkArea;
 struct ChunkArea
 {
 	ChunkPosition min;
@@ -144,13 +145,6 @@ struct Chunks
 #define CHUNKS_CHUNK_IDX_V(v, sidelen) CHUNKS_CHUNK_IDX(v.x, v.y, v.z, sidelen)
 
 int chunks_init(Chunks* chunks, ChunkPosition min, size_t sidelen);
-void chunks_deinit(Chunks *chunks);
-
-void chunks_generate_blocks(
-	Chunks *chunks,
-	const Perlin *perlin, 
-	Fbm heightmap_fbm);
-void chunks_generate_mesh(Chunks *chunks);
-void chunks_unload(Chunks *chunks);
+void chunks_deinit(Chunks *chunks);*/
 
 // void chunks_move(Chunks* chunks, Vec3i delta);

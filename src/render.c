@@ -281,6 +281,7 @@ static struct
 		GLuint prog;
 	} quad;
 	GLuint tmp_texture;
+	GLuint chunk_shader_prog;
 } render;
 
 int render_init(void)
@@ -309,10 +310,19 @@ int render_init(void)
 		render.tmp_texture = load_pixel_texture(&image);
 	}
 
+	// Initialize chunk_shader_prog.
+	{
+
+		const char* vertex_src = "./resources/chunk_vsh.glsl";
+		const char* fragment_src = "./resources/chunk_fsh.glsl";
+		render.chunk_shader_prog = load_shader_program(vertex_src, fragment_src);
+		if (!render.chunk_shader_prog) goto err_chunk_shader_prog;
+	}
+
 	// Initialize quad.
 	{
-		const char *vertex_src = "quad_vsh.glsl";
-		const char *fragment_src = "quad_fsh.glsl";
+		const char *vertex_src = "./resources/quad_vsh.glsl";
+		const char *fragment_src = "./resources/quad_fsh.glsl";
 		render.quad.prog = load_shader_program(vertex_src, fragment_src);
 		if (!render.quad.prog) goto err_quad_prog;
 
@@ -322,10 +332,10 @@ int render_init(void)
 		};
 		const float vertices[4][5] = {
 			// positions         // texture coords
-			{  0.5f,  0.5f, 0.0f,   1.0f, 1.0f },   // top right
-			{  0.5f, -0.5f, 0.0f,   1.0f, 0.0f },   // bottom right
-			{ -0.5f, -0.5f, 0.0f,   0.0f, 0.0f },   // bottom left
-			{ -0.5f,  0.5f, 0.0f,   0.0f, 1.0f },   // top left 
+			{  1.0f,  1.0f, 0.0f,   1.0f, 1.0f },   // top right
+			{  1.0f, -1.0f, 0.0f,   1.0f, 0.0f },   // bottom right
+			{ -1.0f, -1.0f, 0.0f,   0.0f, 0.0f },   // bottom left
+			{ -1.0f,  1.0f, 0.0f,   0.0f, 1.0f },   // top left 
 		};
 		glGenVertexArrays(1, &render.quad.vao);
 		GLuint vbo;
@@ -357,6 +367,8 @@ err_all:
 err_quad_vao:
 	glDeleteProgram(render.quad.prog);
 err_quad_prog:
+	glDeleteProgram(render.chunk_shader_prog);
+err_chunk_shader_prog:
 	glDeleteTextures(1, &render.tmp_texture);
 err_tmp_texture:
 err_glad:
@@ -389,4 +401,9 @@ void render_draw_quad(GLuint texture, Mat transform)
 GLuint render_tmp_texture(void)
 {
 	return render.tmp_texture;
+}
+
+GLuint render_chunk_shader_program(void)
+{
+	return render.chunk_shader_prog;
 }

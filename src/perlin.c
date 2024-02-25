@@ -2,14 +2,8 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <float.h>
-
-// Be careful, type of Perlin::p depends on ARRAY_SIZE.
-#define ARRAY_SIZE 256
-
-struct Perlin 
-{
-	uint8_t p[ARRAY_SIZE * 2];
-};
+#include <assert.h>
+#define ASSERT(x) assert(x)
 
 static inline float fade(float t)
 {
@@ -45,36 +39,33 @@ static uint32_t hash_u32(uint32_t u)
 	return u;
 }
 
-Perlin *perlin_init(uint32_t seed)
+void perlin_init(Perlin* perlin, uint32_t seed)
 {
-	Perlin *perlin = malloc(sizeof(Perlin));
-	if (perlin == NULL) return NULL;
+	ASSERT(perlin != NULL);
 
-	for (size_t i = 0; i < ARRAY_SIZE; i++) {
+	for (size_t i = 0; i < PERLIN_ARRAY_SIZE; i++) {
 		perlin->p[i] = (uint8_t)i;
 	}
 
-	for (size_t i = 0; i < ARRAY_SIZE; i++) {
+	for (size_t i = 0; i < PERLIN_ARRAY_SIZE; i++) {
 		seed = hash_u32(seed);
-		size_t j = i + seed / (UINT32_MAX / (ARRAY_SIZE - i) + 1);  // ???
+		size_t j = i + seed / (UINT32_MAX / (PERLIN_ARRAY_SIZE - i) + 1);  // ???
 		uint8_t temp = perlin->p[j];
 		perlin->p[j] = perlin->p[i];
 		perlin->p[i] = temp;
 	}
-	for (size_t i = 0; i < ARRAY_SIZE; i++) {
-		perlin->p[i + ARRAY_SIZE] = perlin->p[i];
+	for (size_t i = 0; i < PERLIN_ARRAY_SIZE; i++) {
+		perlin->p[i + PERLIN_ARRAY_SIZE] = perlin->p[i];
 	}
 	return perlin;
 }
 
 float perlin3(const Perlin *perlin, float x, float y, float z)
 {
-	x = (x / 2.12345f) + ((float)FLT_MAX / 2);
-	y = (y / 2.12345f) + ((float)FLT_MAX / 2);
-	z = (z / 2.12345f) + ((float)FLT_MAX / 2);
-	size_t xi = ((size_t)x) & ARRAY_SIZE;
-	size_t yi = ((size_t)y) & ARRAY_SIZE;
-	size_t zi = ((size_t)z) & ARRAY_SIZE;
+	ASSERT(perlin != NULL);
+	size_t xi = ((size_t)x) & (PERLIN_ARRAY_SIZE - 1);
+	size_t yi = ((size_t)y) & (PERLIN_ARRAY_SIZE - 1);
+	size_t zi = ((size_t)z) & (PERLIN_ARRAY_SIZE - 1);
 	x = x - ((size_t)x);
 	y = y - ((size_t)y);
 	z = z - ((size_t)z);
@@ -107,10 +98,9 @@ float perlin3(const Perlin *perlin, float x, float y, float z)
 }
 float perlin2(const Perlin *perlin, float x, float y)
 {
-	x = (x / 2.12345f) + ((float)FLT_MAX / 2);
-	y = (y / 2.12345f) + ((float)FLT_MAX / 2);
-	size_t xi = ((size_t)x) & ARRAY_SIZE;
-	size_t yi = ((size_t)y) & ARRAY_SIZE;
+	ASSERT(perlin != NULL);
+	size_t xi = ((size_t)x) & (PERLIN_ARRAY_SIZE - 1);
+	size_t yi = ((size_t)y) & (PERLIN_ARRAY_SIZE - 1);
 	x = x - (size_t)x;
 	y = y - (size_t)y;
 	float u = fade(x);
@@ -131,8 +121,8 @@ float perlin2(const Perlin *perlin, float x, float y)
 }
 float perlin1(const Perlin *perlin, float x)
 {
-	x = (x / 2.12345f) + ((float)FLT_MAX / 2);
-	size_t xi = ((size_t)x) & ARRAY_SIZE;
+	ASSERT(perlin != NULL);
+	size_t xi = ((size_t)x) & (PERLIN_ARRAY_SIZE - 1);
 	x = x - ((size_t)x);
 	float u = fade(x);
 	
@@ -147,6 +137,7 @@ float fbm3(
 	Fbm fbm,
 	float x, float y, float z)
 {
+	ASSERT(perlin != NULL);
 	float result = 0.0f;
 	float frequency = fbm.frequency;
 	float intensity = fbm.intensity;
@@ -167,6 +158,7 @@ float fbm2(
 	Fbm fbm,
 	float x, float y)
 {
+	ASSERT(perlin != NULL);
 	float result = 0.0f;
 	float frequency = fbm.frequency;
 	float intensity = fbm.intensity;
@@ -186,6 +178,7 @@ float fbm1(
 	Fbm fbm,
 	float x)
 {
+	ASSERT(perlin != NULL);
 	float result = 0.0f;
 	float frequency = fbm.frequency;
 	float intensity = fbm.intensity;

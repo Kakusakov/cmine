@@ -1,4 +1,5 @@
 #pragma once
+#include "pack.h"
 #include <math.h>
 
 static inline int mod(int a, int b) {
@@ -11,34 +12,34 @@ static inline int mod(int a, int b) {
 #define RAD_TO_DEG (180.0 / PI)
 
 typedef struct Vec2f Vec2f;
-struct Vec2f
+PACK(struct Vec2f
 {
 	float x;
 	float y;
-};
+});
 
 typedef struct Vec3f Vec3f;
-struct Vec3f
+PACK(struct Vec3f
 {
 	float x;
 	float y;
 	float z;
-};
+});
 
-typedef struct Vec2f Vec2f;
-struct Vec2i
+typedef struct Vec2i Vec2i;
+PACK(struct Vec2i
 {
 	int x;
 	int y;
-};
+});
 
 typedef struct Vec3i Vec3i;
-struct Vec3i
+PACK(struct Vec3i
 {
 	int x;
 	int y;
 	int z;
-};
+});
 
 static inline float vec3f_dot(Vec3f a, Vec3f b)
 {
@@ -109,7 +110,7 @@ static inline Vec3f vec3f_opengl_style(Vec3f a)
 	return (Vec3f) {
 		.x = a.y,
 		.y = a.z,
-		.z = a.x,
+		.z = -a.x,
 	};
 }
 

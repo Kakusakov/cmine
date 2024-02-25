@@ -14,7 +14,6 @@ PACK(struct Color32
 #define COLOR32_GREEN ((Color32){ 0xB3, 0xFF, 0x70, 0xFF })
 #define COLOR32_BLUE ((Color32){ 0x00, 0x6A, 0xFF, 0xFF })
 #define COLOR32_BLACK ((Color32){ 0x00, 0x00, 0x00, 0xFF })
-#define COLOR32_WHITE ((Color32){ 0xFF, 0xFF, 0xFF, 0xFF })
 
 typedef enum ImageError ImageError;
 enum ImageError
