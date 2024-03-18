@@ -1,6 +1,7 @@
 #pragma once
 #include "pack.h"
 #include <stdint.h>
+#include <stddef.h>
 
 typedef struct Color32 Color32;
 PACK(struct Color32

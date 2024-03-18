@@ -1,5 +1,6 @@
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED True)
+set(OpenGL_GL_PREFERENCE GLVND)
 
 include_directories("${cmine_SOURCE_DIR}/include")
 file(GLOB cmine_ALL_HEADERS "${cmine_SOURCE_DIR}/include/*.h")

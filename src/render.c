@@ -305,7 +305,7 @@ int render_init(void)
 		const Image image = {
 			.width = 2,
 			.height = 2,
-			.pixels = &tmp_colors,
+			.pixels = tmp_colors,
 		};
 		render.tmp_texture = load_pixel_texture(&image);
 	}

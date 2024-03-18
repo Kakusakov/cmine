@@ -57,7 +57,6 @@ void perlin_init(Perlin* perlin, uint32_t seed)
 	for (size_t i = 0; i < PERLIN_ARRAY_SIZE; i++) {
 		perlin->p[i + PERLIN_ARRAY_SIZE] = perlin->p[i];
 	}
-	return perlin;
 }
 
 float perlin3(const Perlin *perlin, float x, float y, float z)
