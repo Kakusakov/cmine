@@ -1,6 +1,7 @@
 #include "chunk.h"
 #include <limits.h>
 #include <assert.h>
+#include <stdlib.h>
 #define ASSERT(x) assert(x)
 
 void chunk_init(Chunk* chunk)
@@ -152,6 +153,7 @@ void chunk_generate_mesh(Chunk *chunk, AdjacentChunks adjacent_chunks)
 						y + norm.y,
 						z + norm.z,
 					};
+					// TODO: cull with adjacent chunk...
 					if (from == face_culling_invisible) {
 						continue;
 					} else if (
@@ -189,7 +191,7 @@ void chunk_unload(Chunk *chunk)
 	chunk->generation_stage = 0;
 }
 
-/*int chunks_init(Chunks* chunks, ChunkPosition min, size_t sidelen)
+void chunks_init(Chunks* chunks, CPos min, size_t sidelen)
 {
 	ASSERT(sidelen != 0);
 	ASSERT(SIZE_MAX / sidelen / sidelen / sidelen >= 1);
@@ -200,13 +202,12 @@ void chunk_unload(Chunk *chunk)
 		.sidelen = sidelen,
 	};
 	chunks->items = malloc(chunk_count * sizeof(Chunk));
-	if (chunks->items == NULL) return 0;
+	if (chunks->items == NULL) abort();
 
 	for (size_t i = 0; i < chunk_count; i++)
 	{
-		chunks->items[i] = chunk_init();
+		chunk_init(&chunks->items[i]);
 	}
-	return 1;
 }
 
 void chunks_deinit(Chunks* chunks)
@@ -222,40 +223,45 @@ void chunks_deinit(Chunks* chunks)
 	chunks->area.sidelen = 0;
 }
 
-static int is_world_within_area(ChunkPosition world, ChunkArea area)
+static int is_world_within_area(CPos pos, ChunkArea area)
 {
 	return
-		world.x >= area.min.x &&
-		world.y >= area.min.y &&
-		world.z >= area.min.z &&
-		world.x < area.min.x + area.sidelen &&
-		world.y < area.min.y + area.sidelen &&
-		world.z < area.min.z + area.sidelen;
+		pos.x >= area.min.x &&
+		pos.y >= area.min.y &&
+		pos.z >= area.min.z &&
+		pos.x < area.min.x + area.sidelen &&
+		pos.y < area.min.y + area.sidelen &&
+		pos.z < area.min.z + area.sidelen;
 }
 
-static ChunkPosition world_to_area_local(ChunkPosition world, ChunkArea area)
+static int is_local_within_area(CPos lpos, ChunkArea area)
+{
+	return
+		lpos.x >= 0 &&
+		lpos.y >= 0 &&
+		lpos.z >= 0 &&
+		lpos.x < area.sidelen &&
+		lpos.y < area.sidelen &&
+		lpos.z < area.sidelen;
+}
+
+static CPos cp2lcp(CPos world, ChunkArea area)
 {
 	ASSERT(is_world_within_area(world, area));
-	return (ChunkPosition) {
+	return (CPos) {
 		mod(world.x - area.min.x + area.offset.x, (int)area.sidelen),
 		mod(world.y - area.min.y + area.offset.y, (int)area.sidelen),
 		mod(world.z - area.min.z + area.offset.z, (int)area.sidelen),
 	};
 }
 
-static ChunkPosition area_local_to_world(ChunkPosition area_local, ChunkArea area)
+static CPos lcp2cp(CPos lpos, ChunkArea area)
 {
-	ASSERT(area_local.x >= 0);
-	ASSERT(area_local.y >= 0);
-	ASSERT(area_local.z >= 0);
-	ASSERT(area_local.x < area.sidelen);
-	ASSERT(area_local.y < area.sidelen);
-	ASSERT(area_local.z < area.sidelen);
-
-	return (ChunkPosition) {
-		area.min.x + mod(area_local.x - area.offset.x, (int)area.sidelen),
-		area.min.y + mod(area_local.y - area.offset.y, (int)area.sidelen),
-		area.min.z + mod(area_local.z - area.offset.z, (int)area.sidelen),
+	ASSERT(is_local_within_area(lpos, area));
+	return (CPos) {
+		area.min.x + mod(lpos.x - area.offset.x, (int)area.sidelen),
+		area.min.y + mod(lpos.y - area.offset.y, (int)area.sidelen),
+		area.min.z + mod(lpos.z - area.offset.z, (int)area.sidelen),
 	};
 }
 
@@ -272,20 +278,33 @@ void chunks_generate_blocks(
 			for (size_t z = 0; z < sidelen; z++)
 			{
 				Chunk *chunk = &chunks->items[CHUNKS_CHUNK_IDX(x, y, z, sidelen)];
-				ChunkPosition area_local = {x, y, z};
-				ChunkPosition chunk_world = area_local_to_world(area_local, chunks->area);
-				BlockPosition world_min = {
-					chunk_world.x * CHUNK_SIDELEN,
-					chunk_world.y * CHUNK_SIDELEN,
-					chunk_world.z * CHUNK_SIDELEN,
-				};
+				CPos lpos = {x, y, z};
+				BPos world_min = cp2bp(lcp2cp(lpos, chunks->area));
 				chunk_generate_blocks(chunk, perlin, heightmap_fbm, world_min);
 			}
 		}
 	}
 }
 
-void chunks_generate_mb(Chunks *chunks)
+static Chunk* chunks_chunk(Chunks* chunks, CPos lpos)
+{
+	if (!is_local_within_area(lpos, chunks->area)) return NULL;
+	return &chunks->items[CHUNKS_CHUNK_IDX_V(lpos, chunks->area.sidelen)];
+}
+
+static AdjacentChunks chunks_adjacent(Chunks* chunks, CPos lpos)
+{
+	AdjacentChunks adj;
+	adj.items[dir_px] = chunks_chunk(chunks, (CPos){lpos.x + 1, lpos.y, lpos.z});
+	adj.items[dir_nx] = chunks_chunk(chunks, (CPos){lpos.x - 1, lpos.y, lpos.z});
+	adj.items[dir_py] = chunks_chunk(chunks, (CPos){lpos.x, lpos.y + 1, lpos.z});
+	adj.items[dir_ny] = chunks_chunk(chunks, (CPos){lpos.x, lpos.y - 1, lpos.z});
+	adj.items[dir_pz] = chunks_chunk(chunks, (CPos){lpos.x, lpos.y, lpos.z + 1});
+	adj.items[dir_nz] = chunks_chunk(chunks, (CPos){lpos.x, lpos.y, lpos.z - 1});
+	return adj;
+}
+
+void chunks_generate_mesh(Chunks *chunks)
 {
 	size_t sidelen = chunks->area.sidelen;
 	for (size_t x = 0; x < sidelen; x++)
@@ -294,8 +313,9 @@ void chunks_generate_mb(Chunks *chunks)
 		{
 			for (size_t z = 0; z < sidelen; z++)
 			{
-				Chunk *chunk = &chunks->items[CHUNKS_CHUNK_IDX(x, y, z, sidelen)];
-				chunk_generate_mb(chunk, (AdjacentChunks){0});
+				CPos lpos = {x, y, z};
+				Chunk *chunk = &chunks->items[CHUNKS_CHUNK_IDX_V(lpos, sidelen)];
+				chunk_generate_mesh(chunk, chunks_adjacent(chunks, lpos));
 			}
 		}
 	}
@@ -315,4 +335,22 @@ void chunks_unload(Chunks *chunks)
 			}
 		}
 	}
-}*/
+}
+
+void chunks_draw(Chunks* chunks, Camera cam, Perspective p) {
+	size_t sidelen = chunks->area.sidelen;
+	for (size_t x = 0; x < sidelen; x++)
+	{
+		for (size_t y = 0; y < sidelen; y++)
+		{
+			for (size_t z = 0; z < sidelen; z++)
+			{
+				CPos lpos = {x, y, z};
+				Chunk* chunk = &chunks->items[CHUNKS_CHUNK_IDX_V(lpos, sidelen)];
+				Camera c = cam;
+				c.pos = vadd(cam.pos, p2gl(bp2p(cp2bp(lcp2cp(lpos, chunks->area)))));
+				mesh_draw(&chunk->mesh, render_tmp_texture(), c, p);
+			}
+		}
+	}
+}

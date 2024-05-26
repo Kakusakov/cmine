@@ -452,7 +452,15 @@ void mb_append(MeshBuilder* mb, MeshVertex vertex)
 	}
 	mb->items[mb->count++] = vertex;
 }
-void mesh_draw(const Mesh* mesh, Mat transform, GLuint texture)
+void mesh_draw(const Mesh* mesh, GLuint texture, Camera cam, Perspective p)
+{
+	Mat ts = MAT_IDENTITY;
+	ts = mat_translate(ts, cam.pos);
+	ts = mat_look_at(ts, (Vec3){0}, cam.dir, cam.up);
+	ts = mat_perspective(ts, p.aspect, p.fov_z_rad, p.near, p.far);
+	mesh_draw_matrix(mesh, texture, ts);
+}
+void mesh_draw_matrix(const Mesh* mesh, GLuint texture, Mat transform)
 {
 	GLuint prog = render_chunk_shader_program();
 	glUseProgram(prog);

@@ -51,8 +51,8 @@ void world_run(void) {
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
-	Chunk* chunk = malloc(sizeof(Chunk));
-	chunk_init(chunk);
+	Chunks chunks;
+	chunks_init(&chunks, (CPos){0}, 3);
 
 	int should_generate_chunk = 1;
 	uint32_t seed = 0;
@@ -82,7 +82,7 @@ void world_run(void) {
 	{
 		if (should_generate_chunk)
 		{
-			chunk_unload(chunk);
+			chunks_unload(&chunks);
 			Perlin* perlin = malloc(sizeof(Perlin));
 			perlin_init(perlin, seed);
 			Fbm fbm = {
@@ -92,8 +92,8 @@ void world_run(void) {
 				.persistance = 1,
 				.lacunarity = 1,
 			};
-			chunk_generate_blocks(chunk, perlin, fbm, (BPos){0});
-			chunk_generate_mesh(chunk, (AdjacentChunks){0});
+			chunks_generate_blocks(&chunks, perlin, fbm, (BPos){0});
+			chunks_generate_mesh(&chunks, (AdjacentChunks){0});
 			free(perlin);
 			should_generate_chunk = 0;
 			seed++;
@@ -129,27 +129,33 @@ void world_run(void) {
 			v_ang += mouse_dy * mouse_speed;
 		}
 
-		Mat transform = MAT_IDENTITY;
-		
-		Vec3 from = p2gl((Vec3){0});
-		transform = mat_translate(transform, pos);
-		transform = mat_look_at(transform, from, dir, up);
+
 		int width = app_window_width();
 		int height = app_window_height();
 		float aspect = (float)width / (float)height;
-		transform = mat_perspective(transform, aspect, fov_z_radians, near, far);
 
 		glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		mesh_draw(&chunk->mesh, transform, texture);
+
+		Camera cam = {
+			.pos = pos, 
+			.dir = dir, 
+			.up = up
+		};
+		Perspective p = {
+			.fov_z_rad = fov_z_radians,
+			.aspect = aspect,
+			.near = near,
+			.far = far
+		};
+		chunks_draw(&chunks, cam, p);
 		app_swap_buffers();
 
 		app_update();
 		key_buffer_update(&keys);
 	}
 
-	chunk_deinit(chunk);
-	free(chunk);
+	chunks_deinit(&chunks);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
 }

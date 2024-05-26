@@ -209,11 +209,10 @@ static inline Mat mat_look_at(
 	return mat_mul(mat, m);
 }
 
-// TODO: is this dead code?
-/*static inline int mod(int a, int b) {
+static inline int mod(int a, int b) {
 	int result = a % b;
 	return result >= 0 ? result : result + b;
-}*/
+}
 
 
 //static inline Vec4f vec4f_plane(const Vec3f point, const Vec3f normal) {

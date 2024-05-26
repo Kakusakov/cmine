@@ -25,6 +25,29 @@ struct Chunk
 #define CHUNK_BLOCK_IDX(x, y, z) (z * CHUNK_SIDELEN * CHUNK_SIDELEN + y * CHUNK_SIDELEN + x)
 #define CHUNK_BLOCK_IDX_V(v) CHUNK_BLOCK_IDX(v.x, v.y, v.z)
 
+typedef struct CPos CPos;
+struct CPos {
+	int x;
+	int y;
+	int z;
+};
+
+inline BPos cp2bp(CPos pos) {
+	return (BPos) {
+		.x = pos.x * CHUNK_SIDELEN,
+		.y = pos.y * CHUNK_SIDELEN,
+		.z = pos.z * CHUNK_SIDELEN,
+	};
+}
+
+inline CPos bp2cp(BPos pos) {
+	return (CPos) {
+		.x = pos.x / CHUNK_SIDELEN,
+		.y = pos.y / CHUNK_SIDELEN,
+		.z = pos.z / CHUNK_SIDELEN,
+	};
+}
+
 // A collection of adjacent chunks excluding the center chunk.
 typedef struct AdjacentChunks AdjacentChunks;
 struct AdjacentChunks
@@ -54,11 +77,11 @@ void chunk_unload(
 
 // Specifies the thansformation between the world's chunk coordinates and 
 // the internal coordinates used by `Chunks`.
-/*typedef struct ChunkArea ChunkArea;
+typedef struct ChunkArea ChunkArea;
 struct ChunkArea
 {
-	ChunkPosition min;
-	ChunkPosition offset;
+	CPos min;
+	CPos offset;
 	size_t sidelen;
 };
 
@@ -73,7 +96,15 @@ struct Chunks
 #define CHUNKS_CHUNK_IDX(x, y, z, sidelen) (z * sidelen * sidelen + y * sidelen + x)
 #define CHUNKS_CHUNK_IDX_V(v, sidelen) CHUNKS_CHUNK_IDX(v.x, v.y, v.z, sidelen)
 
-int chunks_init(Chunks* chunks, ChunkPosition min, size_t sidelen);
-void chunks_deinit(Chunks *chunks);*/
+void chunks_init(Chunks* chunks, CPos min, size_t sidelen);
+void chunks_deinit(Chunks *chunks);
+void chunks_generate_blocks(
+	Chunks* chunks,
+	const Perlin* perlin,
+	Fbm heightmap_fbm
+);
+void chunks_generate_mesh(Chunks* chunks);
+void chunks_unload(Chunks* chunks);
+void chunks_draw(Chunks* chunks, Camera cam, Perspective p);
 
 // void chunks_move(Chunks* chunks, Vec3i delta);

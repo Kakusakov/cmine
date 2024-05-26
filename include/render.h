@@ -3,6 +3,23 @@
 #include "glad.h"
 #include "image.h"
 
+typedef struct Perspective Perspective;
+struct Perspective
+{
+	float fov_z_rad;
+	float aspect;
+	float near;
+	float far;
+};
+
+typedef struct Camera Camera;
+struct Camera
+{
+	Vec3 pos;
+	Vec3 dir;
+	Vec3 up;
+};
+
 typedef struct Uv Uv;
 PACK(struct Uv
 {
@@ -43,5 +60,6 @@ void mb_init(MeshBuilder* mb);
 void mb_deinit(MeshBuilder* mb);
 Mesh mb_create(const MeshBuilder* mb);
 void mb_append(MeshBuilder* mb, MeshVertex vertex);
-void mesh_draw(const Mesh* mesh, Mat transform, GLuint texture);
+void mesh_draw(const Mesh* mesh, GLuint texture, Camera cam, Perspective p);
+void mesh_draw_matrix(const Mesh* mesh, GLuint texture, Mat transform);
 void mesh_deinit(Mesh* mesh);
