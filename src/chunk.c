@@ -1,79 +1,23 @@
 #include "chunk.h"
-#include "render.h"
 #include <limits.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
 #define ASSERT(x) assert(x)
 
-BlockFaceCulling block_face_culling_get(Block block) 
+void chunk_init(Chunk* chunk)
 {
-	BlockFaceCulling face_culling;
-	switch (block) {
-	case block_unknown: face_culling = block_face_culling_transparent; break;
-	case block_air:     face_culling = block_face_culling_transparent; break;
-	case block_stone:   face_culling = block_face_culling_solid;       break;
-	default: ASSERT(0); break;
-	}
-	return face_culling;
-}
-
-int should_cull_face(BlockFaceCulling from, BlockFaceCulling to) 
-{
-	return from <= to;
-}
-
-BlockPosition block_face_normal(BlockFace face)
-{
-	BlockPosition normal = {0};
-	switch (face) {
-	case block_face_front:  normal.x += 1; break;
-	case block_face_back:   normal.x -= 1; break;
-	case block_face_right:  normal.y += 1; break;
-	case block_face_left:   normal.y -= 1; break;
-	case block_face_top:    normal.z += 1; break;
-	case block_face_bottom: normal.z -= 1; break;
-	default: ASSERT(0); break;
-	}
-	return normal;
-}
-
-AtlasIndex atlas_index_get(Block block, BlockFace face)
-{
-	AtlasIndex index;
-	switch (block) {
-	case block_unknown: index.x = 0; index.y = 0; break;
-	case block_air:     index.x = 0; index.y = 0; break;
-	case block_stone:   index.x = 1; index.y = 0; break;
-	default: ASSERT(0); break;
-	}
-	return index;
-}
-
-Chunk chunk_init(void)
-{
-	GLuint vao;
-	glGenVertexArrays(1, &vao);
-	return (Chunk) {
-		.blocks = {0},
-		.generation_stage = 0,
-		.vertex_count = 0,
-		.vao = vao,
-	};
+	*chunk = (Chunk) {0};
 }
 
 void chunk_deinit(Chunk *chunk)
 {
-	chunk_unload(chunk);  // Should I do this?
-	glDeleteVertexArrays(1, &chunk->vao);
-	chunk->vao = 0;
+	chunk_unload(chunk);
 }
 
 void chunk_generate_blocks(
 	Chunk *chunk,
 	const Perlin *perlin,
-	Fbm heightmap_fbm,
-	BlockPosition world_min)
+	Fbm heightmap,
+	BPos world_min)
 {
 	ASSERT(chunk->generation_stage == chunk_generation_stage_awaits_blocks);
 	for (int x = 0; x < CHUNK_SIDELEN; x++)
@@ -82,7 +26,7 @@ void chunk_generate_blocks(
 		{
 			float noise = fbm2(
 				perlin,
-				heightmap_fbm,
+				heightmap,
 				(float)(world_min.x + x + 0.31415f),
 				(float)(world_min.y + y + 0.31415f));
 			ASSERT(noise > INT_MIN && noise < INT_MAX);  // Check for world boundaries.
@@ -96,123 +40,100 @@ void chunk_generate_blocks(
 	}
 	chunk->generation_stage++;
 }
-
-typedef struct ChunkVertex ChunkVertex;
-PACK(struct ChunkVertex
-{
-	Vec3f pos;
-	Vec2f uv;
-});
-
-typedef struct ChunkVertices ChunkVertices;
-struct ChunkVertices
-{
-	GLsizei count;
-	GLsizei capacity;
-	ChunkVertex* items;
-};
-
-static int chunk_vertices_add(
-	ChunkVertices *vertices,
-	Vec3f pos,
+static void add_chunk_face(
+	MeshBuilder *mb,
+	BPos pos,
 	Block block,
-	BlockFace face)
+	Dir face)
 {
 	ASSERT(pos.x >= 0);
 	ASSERT(pos.y >= 0);
 	ASSERT(pos.z >= 0);
-	if (vertices->count + 6 > vertices->capacity)
-	{
-		vertices->capacity = (vertices->capacity == 0) ? 6 : vertices->capacity * 2;
-		void* tmp = realloc(vertices->items, sizeof(ChunkVertex) * vertices->capacity);
-		if (!tmp) return 0;
-		vertices->items = tmp;
-	}
 
-	pos = vec3f_opengl_style(pos);
-	Vec3f v1;
-	Vec3f v2;
-	Vec3f v3;
-	Vec3f v4;
+	Vec3 v1;
+	Vec3 v2;
+	Vec3 v3;
+	Vec3 v4;
 
 	switch (face) {
-	case block_face_back:
-		v1 = (Vec3f){0, 1, 1};
-		v2 = (Vec3f){0, 0, 1};
-		v3 = (Vec3f){1, 0, 1};
-		v4 = (Vec3f){1, 1, 1};
+	case dir_nx:
+		v1 = (Vec3){0, 1, 1};
+		v2 = (Vec3){0, 0, 1};
+		v3 = (Vec3){1, 0, 1};
+		v4 = (Vec3){1, 1, 1};
 		break;
-	case block_face_front:
-		v1 = (Vec3f){1, 1, 0};
-		v2 = (Vec3f){1, 0, 0};
-		v3 = (Vec3f){0, 0, 0};
-		v4 = (Vec3f){0, 1, 0};
+	case dir_px:
+		v1 = (Vec3){1, 1, 0};
+		v2 = (Vec3){1, 0, 0};
+		v3 = (Vec3){0, 0, 0};
+		v4 = (Vec3){0, 1, 0};
 		break;
-	case block_face_right:
-		v1 = (Vec3f){1, 1, 1};
-		v2 = (Vec3f){1, 0, 1};
-		v3 = (Vec3f){1, 0, 0};
-		v4 = (Vec3f){1, 1, 0};
+	case dir_py:
+		v1 = (Vec3){1, 1, 1};
+		v2 = (Vec3){1, 0, 1};
+		v3 = (Vec3){1, 0, 0};
+		v4 = (Vec3){1, 1, 0};
 		break;
-	case block_face_left:
-		v1 = (Vec3f){0, 1, 0};
-		v2 = (Vec3f){0, 0, 0};
-		v3 = (Vec3f){0, 0, 1};
-		v4 = (Vec3f){0, 1, 1};
+	case dir_ny:
+		v1 = (Vec3){0, 1, 0};
+		v2 = (Vec3){0, 0, 0};
+		v3 = (Vec3){0, 0, 1};
+		v4 = (Vec3){0, 1, 1};
 		break;
-	case block_face_top:
-		v1 = (Vec3f){0, 1, 0};
-		v2 = (Vec3f){0, 1, 1};
-		v3 = (Vec3f){1, 1, 1};
-		v4 = (Vec3f){1, 1, 0};
+	case dir_pz:
+		v1 = (Vec3){0, 1, 0};
+		v2 = (Vec3){0, 1, 1};
+		v3 = (Vec3){1, 1, 1};
+		v4 = (Vec3){1, 1, 0};
 		break;
-	case block_face_bottom:
-		v1 = (Vec3f){0, 0, 1};
-		v2 = (Vec3f){0, 0, 0};
-		v3 = (Vec3f){1, 0, 0};
-		v4 = (Vec3f){1, 0, 1};
+	case dir_nz:
+		v1 = (Vec3){0, 0, 1};
+		v2 = (Vec3){0, 0, 0};
+		v3 = (Vec3){1, 0, 0};
+		v4 = (Vec3){1, 0, 1};
 		break;
 	default:
 		ASSERT(0); 
-		break;
 	}
 
-	v1.x += pos.x; v1.y += pos.y; v1.z += pos.z;
-	v2.x += pos.x; v2.y += pos.y; v2.z += pos.z;
-	v3.x += pos.x; v3.y += pos.y; v3.z += pos.z;
-	v4.x += pos.x; v4.y += pos.y; v4.z += pos.z;
+	Vec3 vb = p2gl(bp2p(pos));
+	v1.x += vb.x; v1.y += vb.y; v1.z += vb.z;
+	v2.x += vb.x; v2.y += vb.y; v2.z += vb.z;
+	v3.x += vb.x; v3.y += vb.y; v3.z += vb.z;
+	v4.x += vb.x; v4.y += vb.y; v4.z += vb.z;
 
-	AtlasIndex atlas_index = atlas_index_get(block, face);
-	Vec2f uv_base = {
-		.x = 0, //((float)atlas_index.x) / ATLAS_SIDELEN,
-		.y = 0, //((float)atlas_index.y) / ATLAS_SIDELEN,
+	AtlasTexture texture = block_face_texture(block, face);
+	// TODO: get atlas coords form texture...
+	Uv uv_base = {
+		.u = 0,
+		.v = 0,
 	};
-	float uv_step_x = 1; //1.0f / ATLAS_SIDELEN;
-	float uv_step_y = 1; //1.0f / ATLAS_SIDELEN;
+	float u_step = 1;
+	float v_step = 1;
 
-	Vec2f uv1 = {uv_step_x, uv_step_y};
-	Vec2f uv2 = {uv_step_x, 0};
-	Vec2f uv3 = {0, 0};
-	Vec2f uv4 = {0, uv_step_y};
+	Uv uv1 = {u_step, v_step};
+	Uv uv2 = {u_step, 0};
+	Uv uv3 = {0, 0};
+	Uv uv4 = {0, v_step};
 
-	uv1.x += uv_base.x; uv1.y += uv_base.y;
-	uv2.x += uv_base.x; uv2.y += uv_base.y;
-	uv3.x += uv_base.x; uv3.y += uv_base.y;
-	uv4.x += uv_base.x; uv4.y += uv_base.y;
+	uv1.u += uv_base.u; uv1.v += uv_base.v;
+	uv2.u += uv_base.u; uv2.v += uv_base.v;
+	uv3.u += uv_base.u; uv3.v += uv_base.v;
+	uv4.u += uv_base.u; uv4.v += uv_base.v;
 
-	vertices->items[vertices->count++] = (ChunkVertex){v1, uv1};
-	vertices->items[vertices->count++] = (ChunkVertex){v2, uv2};
-	vertices->items[vertices->count++] = (ChunkVertex){v4, uv4};
-	vertices->items[vertices->count++] = (ChunkVertex){v2, uv2};
-	vertices->items[vertices->count++] = (ChunkVertex){v3, uv3};
-	vertices->items[vertices->count++] = (ChunkVertex){v4, uv4};
-	return 1;
+	mb_append(mb, (MeshVertex){v1, uv1});
+	mb_append(mb, (MeshVertex){v2, uv2});
+	mb_append(mb, (MeshVertex){v4, uv4});
+	mb_append(mb, (MeshVertex){v2, uv2});
+	mb_append(mb, (MeshVertex){v3, uv3});
+	mb_append(mb, (MeshVertex){v4, uv4});
 }
 
 void chunk_generate_mesh(Chunk *chunk, AdjacentChunks adjacent_chunks)
 {
 	ASSERT(chunk->generation_stage == chunk_generation_stage_awaits_mesh);
-	ChunkVertices vertices = {0};
+	MeshBuilder mb;
+	mb_init(&mb);
 
 	for (int x = 0; x < CHUNK_SIDELEN; x++)
 	{
@@ -220,51 +141,36 @@ void chunk_generate_mesh(Chunk *chunk, AdjacentChunks adjacent_chunks)
 		{
 			for (int z = 0; z < CHUNK_SIDELEN; z++)
 			{
-				Block block = chunk->blocks[CHUNK_BLOCK_IDX(x, y, z)];
-				BlockFaceCulling from = block_face_culling_get(block);
-				for (BlockFace face = 0; face < block_face_count; face++)
+				BPos pos = {x, y, z};
+				Block block = chunk->blocks[CHUNK_BLOCK_IDX_V(pos)];
+				FaceCulling from = block_face_culling(block);
+				for (Dir face = 0; face < dir_count; face++)
 				{
-					BlockPosition norm = block_face_normal(face);
-					BlockPosition adj = {
+					BPos norm = dir_normal(face);
+					BPos adj = {
 						x + norm.x,
 						y + norm.y,
 						z + norm.z,
 					};
-					if (adj.x >= 0 && adj.x < CHUNK_SIDELEN &&
+					if (from == face_culling_invisible) {
+						continue;
+					} else if (
+						adj.x >= 0 && adj.x < CHUNK_SIDELEN &&
 						adj.y >= 0 && adj.y < CHUNK_SIDELEN &&
 						adj.z >= 0 && adj.z < CHUNK_SIDELEN)
 					{
 						Block adj_block = chunk->blocks[CHUNK_BLOCK_IDX_V(adj)];
-						BlockFaceCulling to = block_face_culling_get(adj_block);
+						FaceCulling to = block_face_culling(adj_block);
 						if (should_cull_face(from, to)) continue;
 					}
-					else if (from == block_face_culling_transparent) continue;
-					Vec3f pos = {x, y, z};
-					if (!chunk_vertices_add(&vertices, pos, block, face))
-					{
-						// TODO: Handle error...
-						ASSERT(0);
-					}
+					add_chunk_face(&mb, pos, block, face);
 				}
 			}
 		}
 	}
 
-	GLuint vbo;
-	glGenBuffers(1, &vbo);
-	glBindVertexArray(chunk->vao);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertices.count * sizeof(ChunkVertex), vertices.items, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(ChunkVertex), (void*)0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ChunkVertex), (void*)sizeof(Vec3f));
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glBindVertexArray(0);
-	glDeleteBuffers(1, &vbo);
-	chunk->vertex_count = vertices.count;
-
-	free(vertices.items);
-	chunk->generation_stage++;
+	chunk->mesh = mb_create(&mb);
+	mb_deinit(&mb);
 }
 
 void chunk_unload(Chunk *chunk)
@@ -272,10 +178,7 @@ void chunk_unload(Chunk *chunk)
 	switch (chunk->generation_stage)
 	{
 	case chunk_generation_stage_ready:
-		glBindVertexArray(chunk->vao);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
-		chunk->vertex_count = 0;
+		mesh_deinit(&chunk->mesh);
 	case chunk_generation_stage_awaits_mesh:
 	case chunk_generation_stage_awaits_blocks:
 		break;
@@ -284,30 +187,6 @@ void chunk_unload(Chunk *chunk)
 		break;
 	}
 	chunk->generation_stage = 0;
-}
-
-void draw_chunk(const Chunk* chunk, Mat transform, GLuint texture)
-{
-	GLuint prog = render_chunk_shader_program();
-	glUseProgram(prog);
-
-	const char* transform_name = "transform";
-	GLuint location = glGetUniformLocation(prog, transform_name);
-	if (location == -1)
-	{
-		fprintf(
-			stderr,
-			"\nCaught runtime error:\n"
-			"\nRenderer is unbale to find unform `%s` in chunk shader program",
-			transform_name);
-		return;
-	}
-	glUniformMatrix4fv(location, 1, GL_FALSE, transform.v);
-
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glBindVertexArray(chunk->vao);
-	glDrawArrays(GL_TRIANGLES, 0, chunk->vertex_count);
-	glBindVertexArray(0);
 }
 
 /*int chunks_init(Chunks* chunks, ChunkPosition min, size_t sidelen)
@@ -406,7 +285,7 @@ void chunks_generate_blocks(
 	}
 }
 
-void chunks_generate_mesh(Chunks *chunks)
+void chunks_generate_mb(Chunks *chunks)
 {
 	size_t sidelen = chunks->area.sidelen;
 	for (size_t x = 0; x < sidelen; x++)
@@ -416,7 +295,7 @@ void chunks_generate_mesh(Chunks *chunks)
 			for (size_t z = 0; z < sidelen; z++)
 			{
 				Chunk *chunk = &chunks->items[CHUNKS_CHUNK_IDX(x, y, z, sidelen)];
-				chunk_generate_mesh(chunk, (AdjacentChunks){0});
+				chunk_generate_mb(chunk, (AdjacentChunks){0});
 			}
 		}
 	}

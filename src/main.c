@@ -1,5 +1,4 @@
 #include "app.h"
-#include "render.h"
 #include "chunk.h"
 #include "input.h"
 #include <stdlib.h>
@@ -53,7 +52,7 @@ void world_run(void) {
 	glEnable(GL_DEPTH_TEST);
 
 	Chunk* chunk = malloc(sizeof(Chunk));
-	*chunk = chunk_init();
+	chunk_init(chunk);
 
 	int should_generate_chunk = 1;
 	uint32_t seed = 0;
@@ -61,7 +60,7 @@ void world_run(void) {
 	GLuint texture = render_tmp_texture();
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-	Vec3f pos = {1.0f, 0.0f, -1.5f};
+	Vec3 pos = p2gl((Vec3){1.0f, 0.0f, -1.5f});
 	float fov_z_radians = 75.0f * DEG_TO_RAD;
 	float near = 0.1f;
 	float far = 100.0f;
@@ -93,7 +92,7 @@ void world_run(void) {
 				.persistance = 1,
 				.lacunarity = 1,
 			};
-			chunk_generate_blocks(chunk, perlin, fbm, (BlockPosition){0});
+			chunk_generate_blocks(chunk, perlin, fbm, (BPos){0});
 			chunk_generate_mesh(chunk, (AdjacentChunks){0});
 			free(perlin);
 			should_generate_chunk = 0;
@@ -109,17 +108,17 @@ void world_run(void) {
 		mouse_x += mouse_dx;
 		mouse_y += mouse_dy;
 
-		Vec3f up = {0, 0, 1};
-		Vec3f dir = {-cosf(h_ang), -sinf(h_ang), 0};
-		Vec3f left = vec3f_cross(dir, up);
+		Vec3 up = p2gl((Vec3){0, 0, 1});
+		Vec3 dir = p2gl((Vec3){-cosf(h_ang), -sinf(h_ang), 0});
+		Vec3 left = vcross(dir, up);
 		
 		float move = move_speed * dt;
-		if (key_buffer_is_key_pressed(&keys, app_key_w)) {pos.x += dir.x * move;  pos.y += dir.y * move;}
-		if (key_buffer_is_key_pressed(&keys, app_key_s)) {pos.x -= dir.x * move;  pos.y -= dir.y * move;}
-		if (key_buffer_is_key_pressed(&keys, app_key_a)) {pos.x += left.x * move; pos.y += left.y * move;}
-		if (key_buffer_is_key_pressed(&keys, app_key_d)) {pos.x -= left.x * move; pos.y -= left.y * move;}
-		if (key_buffer_is_key_pressed(&keys, app_key_left_shift)) pos.z += move;
-		if (key_buffer_is_key_pressed(&keys, app_key_space)) pos.z -= move;
+		if (key_buffer_is_key_pressed(&keys, app_key_w)) pos = vadd(pos, vmul(dir, vsplat(move)));
+		if (key_buffer_is_key_pressed(&keys, app_key_s)) pos = vsub(pos, vmul(dir, vsplat(move)));
+		if (key_buffer_is_key_pressed(&keys, app_key_a)) pos = vsub(pos, vmul(left, vsplat(move)));
+		if (key_buffer_is_key_pressed(&keys, app_key_d)) pos = vadd(pos, vmul(left, vsplat(move)));
+		if (key_buffer_is_key_pressed(&keys, app_key_left_shift)) pos = vadd(pos, vmul(up, vsplat(move)));
+		if (key_buffer_is_key_pressed(&keys, app_key_space)) pos = vsub(pos, vmul(up, vsplat(move)));
 		if (key_buffer_is_key_down(&keys, app_key_g)) should_generate_chunk = 1;
 
 		if (!app_is_window_focused() || key_buffer_is_key_down(&keys, app_key_esc)) app_show_cursor();
@@ -132,7 +131,7 @@ void world_run(void) {
 
 		Mat transform = MAT_IDENTITY;
 		
-		Vec3f from = {0};
+		Vec3 from = p2gl((Vec3){0});
 		transform = mat_translate(transform, pos);
 		transform = mat_look_at(transform, from, dir, up);
 		int width = app_window_width();
@@ -142,7 +141,7 @@ void world_run(void) {
 
 		glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		draw_chunk(chunk, transform, texture);
+		mesh_draw(&chunk->mesh, transform, texture);
 		app_swap_buffers();
 
 		app_update();

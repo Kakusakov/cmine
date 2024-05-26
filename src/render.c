@@ -407,3 +407,75 @@ GLuint render_chunk_shader_program(void)
 {
 	return render.chunk_shader_prog;
 }
+
+void mb_init(MeshBuilder* mb)
+{
+	*mb = (MeshBuilder){
+		.count = 0,
+		.capacity = 0,
+		.items = NULL,
+	};
+}
+void mb_deinit(MeshBuilder* mb)
+{
+	free(mb->items);
+}
+Mesh mb_create(const MeshBuilder* mb)
+{
+	GLuint vao;
+	glGenVertexArrays(1, &vao);
+	GLuint vbo;
+	glGenBuffers(1, &vbo);
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, mb->count * sizeof(MeshVertex), mb->items, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), (void*)0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), (void*)sizeof(Vec3));
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glBindVertexArray(0);
+	glDeleteBuffers(1, &vbo);
+	Mesh mesh = {
+		.vao = vao,
+		.count = mb->count,
+	};
+	return mesh;
+}
+void mb_append(MeshBuilder* mb, MeshVertex vertex)
+{
+	if (mb->count > mb->capacity - 1)
+	{
+		mb->capacity = (mb->capacity == 0) ? 1 : mb->capacity * 2;
+		void* tmp = realloc(mb->items, sizeof(MeshVertex) * mb->capacity);
+		if (!tmp) abort();
+		mb->items = tmp;
+	}
+	mb->items[mb->count++] = vertex;
+}
+void mesh_draw(const Mesh* mesh, Mat transform, GLuint texture)
+{
+	GLuint prog = render_chunk_shader_program();
+	glUseProgram(prog);
+
+	const char* transform_name = "transform";
+	GLuint location = glGetUniformLocation(prog, transform_name);
+	if (location == -1)
+	{
+		fprintf(
+			stderr,
+			"\nCaught runtime error:\n"
+			"\nRenderer is unbale to find unform `%s` in chunk shader program",
+			transform_name);
+		return;
+	}
+	glUniformMatrix4fv(location, 1, GL_FALSE, transform.v);
+
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glBindVertexArray(mesh->vao);
+	glDrawArrays(GL_TRIANGLES, 0, mesh->count);
+	glBindVertexArray(0);
+}
+void mesh_deinit(Mesh* mesh)
+{
+	glDeleteVertexArrays(1, &mesh->vao);
+}
