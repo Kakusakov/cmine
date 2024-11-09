@@ -1,4 +1,4 @@
-#include "render.h"
+#include "render.h"  // THIS MUST BE INCLUDED FIRST
 #include "context.h"
 #include "input.h"
 #include "chunk.h"

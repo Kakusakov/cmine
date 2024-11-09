@@ -1,5 +1,5 @@
 #pragma once
-#include "glad.h"
+#include "glad.h"  // THIS MUST ALWAYS BE INCLUDED FIRST
 #include "context.h"
 #include "vmath.h"
 #include "image.h"

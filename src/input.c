@@ -63,40 +63,40 @@ void input_update() {
 	mouse_update(&input.mouse);
 	time_update(&input.time);
 }
-f64 input_mouse_x(void) {
+f64 mouse_x(void) {
 	return input.mouse.x;
 }
-f64 input_mouse_y(void) {
+f64 mouse_y(void) {
 	return input.mouse.y;
 }
-f64 input_mouse_dx(void) {
+f64 mouse_dx(void) {
 	return input.mouse.x - input.mouse_prev.x;
 }
-f64 input_mouse_dy(void) {
+f64 mouse_dy(void) {
 	return input.mouse.y - input.mouse_prev.y;
 }
-bool input_is_mouse_pressed(MouseKey key) {
+bool is_mouse_pressed(MouseKey key) {
 	return input.mouse.kys[key];
 }
-bool input_is_mouse_down(MouseKey key) {
+bool is_mouse_down(MouseKey key) {
 	return input.mouse.kys[key] && !input.mouse_prev.kys[key];
 }
-bool input_is_mouse_up(MouseKey key) {
+bool is_mouse_up(MouseKey key) {
 	return !input.mouse.kys[key] && input.mouse_prev.kys[key];
 }
-bool input_is_key_pressed(Key key) {
+bool is_key_pressed(Key key) {
 	return input.keyboard.kys[key];
 }
-bool input_is_key_down(Key key) {
+bool is_key_down(Key key) {
 	return input.keyboard.kys[key] && !input.keyboard_prev.kys[key];
 }
-bool input_is_key_up(Key key) {
+bool is_key_up(Key key) {
 	return !input.keyboard.kys[key] && input.keyboard_prev.kys[key];
 }
-f64 input_time(void) {
+f64 time(void) {
 	return input.time.seconds;
 }
-f64 input_delta_time(void) {
+f64 delta_time(void) {
 	f64 delta = input.time.seconds - input.time_prev.seconds;
 	if (delta > 0.2) {
 		delta = 0.2;
