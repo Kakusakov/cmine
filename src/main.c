@@ -1,6 +1,7 @@
-#include "app.h"
-#include "chunk.h"
+#include "render.h"
+#include "context.h"
 #include "input.h"
+#include "chunk.h"
 #include <stdlib.h>
 
 /*static void main_menu_run(void) {
@@ -54,31 +55,21 @@ void world_run(void) {
 	Chunks chunks;
 	chunks_init(&chunks, (CPos){0}, 3);
 
-	int should_generate_chunk = 1;
-	uint32_t seed = 0;
+	bool should_generate_chunk = true;
+	u32 seed = 0;
 
 	GLuint texture = render_tmp_texture();
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-	Vec3 pos = p2gl((Vec3){1.0f, 0.0f, -1.5f});
-	float fov_z_radians = 75.0f * DEG_TO_RAD;
-	float near = 0.1f;
-	float far = 100.0f;
+	Vec3 pos = v3_new(1, 0, -1.5);
 
-	float mouse_speed = 0.001f;
-	float move_speed = 3.0f;
-	float h_ang = 0;
-	float v_ang = 0;
+	f32 mouse_speed = 0.001f;
+	f32 move_speed = 3.0f;
+	Angle h_ang = angle_from_radians(0);
+	Angle v_ang = angle_from_radians(0);
 
-	app_hide_cursor();
-
-	app_update();
-	KeyBuffer keys;
-	key_buffer_reset(&keys);
-	float time = app_time();
-	float mouse_x = app_cursor_position_x();
-	float mouse_y = app_cursor_position_y();
-	while (!app_should_close())
+	context_hide_cursor();
+	while (!context_has_close_flag())
 	{
 		if (should_generate_chunk)
 		{
@@ -87,72 +78,66 @@ void world_run(void) {
 			perlin_init(perlin, seed);
 			Fbm fbm = {
 				.octave_count = 1,
-				.frequency = 0.2,
+				.frequency = 0.2f,
 				.intensity = 8,
 				.persistance = 1,
 				.lacunarity = 1,
 			};
-			chunks_generate_blocks(&chunks, perlin, fbm, (BPos){0});
-			chunks_generate_mesh(&chunks, (AdjacentChunks){0});
+			chunks_generate_blocks(&chunks, perlin, fbm);
+			chunks_generate_mesh(&chunks);
 			free(perlin);
-			should_generate_chunk = 0;
+			should_generate_chunk = false;
 			seed++;
 		}
 
-		float dt = app_time() - time;
-		if (dt < 0) dt = 0;
-		if (dt > 0.1f) dt = 0.1f;
-		time += dt;
-		float mouse_dx = app_cursor_position_x() - mouse_x;
-		float mouse_dy = app_cursor_position_y() - mouse_y;
-		mouse_x += mouse_dx;
-		mouse_y += mouse_dy;
-
-		Vec3 up = p2gl((Vec3){0, 0, 1});
-		Vec3 dir = p2gl((Vec3){-cosf(h_ang), -sinf(h_ang), 0});
-		Vec3 left = vcross(dir, up);
+		Vec3 up = v3_new(0, 0, 1);
+		Vec3 dir = v3_new(-angle_cos(h_ang), -angle_sin(h_ang), 0);
+		Vec3 left = v3_cross(dir, up);
 		
-		float move = move_speed * dt;
-		if (key_buffer_is_key_pressed(&keys, app_key_w)) pos = vadd(pos, vmul(dir, vsplat(move)));
-		if (key_buffer_is_key_pressed(&keys, app_key_s)) pos = vsub(pos, vmul(dir, vsplat(move)));
-		if (key_buffer_is_key_pressed(&keys, app_key_a)) pos = vsub(pos, vmul(left, vsplat(move)));
-		if (key_buffer_is_key_pressed(&keys, app_key_d)) pos = vadd(pos, vmul(left, vsplat(move)));
-		if (key_buffer_is_key_pressed(&keys, app_key_left_shift)) pos = vadd(pos, vmul(up, vsplat(move)));
-		if (key_buffer_is_key_pressed(&keys, app_key_space)) pos = vsub(pos, vmul(up, vsplat(move)));
-		if (key_buffer_is_key_down(&keys, app_key_g)) should_generate_chunk = 1;
+		f32 move = move_speed * (f32)delta_time();
+		if (is_key_pressed(key_w)) pos = v3_add(pos, v3_scale(dir, move));
+		if (is_key_pressed(key_s)) pos = v3_sub(pos, v3_scale(dir, move));
+		if (is_key_pressed(key_a)) pos = v3_sub(pos, v3_scale(left, move));
+		if (is_key_pressed(key_d)) pos = v3_add(pos, v3_scale(left, move));
+		if (is_key_pressed(key_left_shift)) pos = v3_add(pos, v3_scale(up, move));
+		if (is_key_pressed(key_space)) pos = v3_sub(pos, v3_scale(up, move));
+		if (is_key_down(key_g)) should_generate_chunk = true;
 
-		if (!app_is_window_focused() || key_buffer_is_key_down(&keys, app_key_esc)) app_show_cursor();
-		if (app_is_cursor_hovered() && key_buffer_is_key_down(&keys, app_key_mouse_left)) app_hide_cursor();
-		if (app_is_cursor_hidden()) 
-		{
-			h_ang += mouse_dx * mouse_speed;
-			v_ang += mouse_dy * mouse_speed;
+		if (!context_is_window_focused() || is_key_down(key_esc)) context_show_cursor();
+		if (context_is_cursor_hovered() && is_key_down(mouse_key_left)) context_hide_cursor();
+		if (context_is_cursor_hidden()) {
+			h_ang = angle_normal(angle_add(h_ang, angle_from_radians((f32)mouse_dx()*mouse_speed)));
+			v_ang = angle_clamp(
+				angle_sub(v_ang, angle_from_radians((f32)mouse_dy()*mouse_speed)),
+				angle_from_degrees(-89.9f),
+				angle_from_degrees(89.9f)
+			);
 		}
 
-
-		int width = app_window_width();
-		int height = app_window_height();
-		float aspect = (float)width / (float)height;
+		i32 width = context_window_width();
+		i32 height = context_window_height();
+		f32 aspect = (f32)width / (f32)height;
 
 		glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		f32 sin = angle_sin(v_ang);
+		f32 cos = angle_cos(v_ang);
 		Camera cam = {
 			.pos = pos, 
-			.dir = dir, 
-			.up = up
+			.dir = dir3_from_vec(v3_new(dir.x*cos, dir.y*cos, -sin)),
+			.up = dir3_from_vec(up),
 		};
 		Perspective p = {
-			.fov_z_rad = fov_z_radians,
+			.fov_z_rad = 75.0f * DEG_TO_RAD,
 			.aspect = aspect,
-			.near = near,
-			.far = far
+			.near = 0.1f,
+			.far = 100.0f,
 		};
 		chunks_draw(&chunks, cam, p);
-		app_swap_buffers();
-
-		app_update();
-		key_buffer_update(&keys);
+		context_swap_buffers();
+		context_update();
+		input_update();
 	}
 
 	chunks_deinit(&chunks);
@@ -160,14 +145,15 @@ void world_run(void) {
 	glDisable(GL_DEPTH_TEST);
 }
 
-
 int main(void) {
-	if (!app_init()) return 1;
-	if (!render_init()) return 1;
+	if (!context_try_init()) {
+		return 1;
+	}
+	input_init();
+	render_init();
 
-	app_update();
-	if (!app_should_close()) world_run();
-
-	app_deinit();
+	world_run();
+	
+	context_deinit();
 	return 0;
 }

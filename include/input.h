@@ -1,25 +1,21 @@
 #pragma once
-#include "app.h"
-#include "stdbool.h"
+#include "context.h"
 
-typedef struct KeyBuffer KeyBuffer;
-struct KeyBuffer
-{
-	bool is_key_pressed[app_key_count];
-	bool was_key_pressed[app_key_count];
-};
+void input_init(void);
+void input_update(void);
 
-static inline int key_buffer_is_key_pressed(KeyBuffer *buffer, int key)
-{
-	return buffer->is_key_pressed[key];
-}
-static inline int key_buffer_is_key_up(KeyBuffer *buffer, int key)
-{
-	return buffer->is_key_pressed[key] & !buffer->was_key_pressed[key];
-}
-static inline int key_buffer_is_key_down(KeyBuffer *buffer, int key)
-{
-	return !buffer->is_key_pressed[key] & buffer->was_key_pressed[key];
-}
-void key_buffer_reset(KeyBuffer *buffer);
-void key_buffer_update(KeyBuffer *buffer);
+f64 mouse_x(void);
+f64 mouse_y(void);
+f64 mouse_dx(void);
+f64 mouse_dy(void);
+
+bool is_mouse_pressed(MouseKey key);
+bool is_mouse_down(MouseKey key);
+bool is_mouse_up(MouseKey key);
+
+bool is_key_pressed(Key key);
+bool is_key_down(Key key);
+bool is_key_up(Key key);
+
+f64 time(void);
+f64 delta_time(void);

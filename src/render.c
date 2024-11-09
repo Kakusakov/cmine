@@ -2,8 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "app.h"
-#define CMINE_ENABLE_GL_DEBUG
+#include "config.h"
 
 #ifdef CMINE_ENABLE_GL_DEBUG
 static const char *gl_message_source_name(GLenum source)
@@ -273,7 +272,7 @@ GLuint load_pixel_texture(const Image *image)
 	return texture;
 }
 
-static struct 
+static struct
 {
 	struct
 	{
@@ -284,82 +283,83 @@ static struct
 	GLuint chunk_shader_prog;
 } render;
 
-int render_init(void)
-{
-	// Initialize glad.
-	{
-		if (!gladLoadGLLoader(app_context_gl_loader()))
-		{
-			fprintf(stderr, "Failed to load OpenGL context.\n");
-			goto err_glad;
-		}
-		setup_gl_error_callback();
-	}
+void load_tmp_quad(GLuint vao) {
+	const u32 indices[] = {
+		0, 1, 3,
+		1, 2, 3,
+	};
+	const f32 vertices[4][5] = {
+		// positions         // texture coords
+		{  1.0f,  1.0f, 0.0f,   1.0f, 1.0f },   // top right
+		{  1.0f, -1.0f, 0.0f,   1.0f, 0.0f },   // bottom right
+		{ -1.0f, -1.0f, 0.0f,   0.0f, 0.0f },   // bottom left
+		{ -1.0f,  1.0f, 0.0f,   0.0f, 1.0f },   // top left 
+	};
+	GLuint vbo;
+	GLuint ebo;
+	glGenBuffers(1, &vbo);
+	glGenBuffers(1, &ebo);
 
-	// Initialize tmp_texture.
-	{
-		Color32 tmp_colors[4] = {
+	glBindVertexArray(vao);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(0);
+
+	glDeleteBuffers(1, &vbo);
+	glDeleteBuffers(1, &ebo);
+}
+
+GLuint load_tmp_texture(void) {
+	Color32 tmp_colors[4] = {
 			COLOR32_BLUE, COLOR32_GREEN,
 			COLOR32_PINK, COLOR32_BLACK,
-		};
-		const Image image = {
-			.width = 2,
-			.height = 2,
-			.pixels = tmp_colors,
-		};
-		render.tmp_texture = load_pixel_texture(&image);
+	};
+	const Image image = {
+		.width = 2,
+		.height = 2,
+		.pixels = tmp_colors,
+	};
+	return load_pixel_texture(&image);
+}
+
+int render_init(void) {
+	// Initialize glad
+	if (!gladLoadGLLoader(context_gl_loader())) {
+		fprintf(stderr, "Failed to load OpenGL context.\n");
+		goto err_glad;
 	}
+	setup_gl_error_callback();
 
-	// Initialize chunk_shader_prog.
+	// Initialize tmp_texture
+	render.tmp_texture = load_tmp_texture();
+
+	// Initialize chunk_shader_prog
 	{
-
 		const char* vertex_src = "./resources/chunk_vsh.glsl";
 		const char* fragment_src = "./resources/chunk_fsh.glsl";
 		render.chunk_shader_prog = load_shader_program(vertex_src, fragment_src);
 		if (!render.chunk_shader_prog) goto err_chunk_shader_prog;
 	}
 
-	// Initialize quad.
+	// Initialize quad
 	{
 		const char *vertex_src = "./resources/quad_vsh.glsl";
 		const char *fragment_src = "./resources/quad_fsh.glsl";
 		render.quad.prog = load_shader_program(vertex_src, fragment_src);
 		if (!render.quad.prog) goto err_quad_prog;
 
-		const uint32_t indices[] = {
-			0, 1, 3,
-			1, 2, 3,
-		};
-		const float vertices[4][5] = {
-			// positions         // texture coords
-			{  1.0f,  1.0f, 0.0f,   1.0f, 1.0f },   // top right
-			{  1.0f, -1.0f, 0.0f,   1.0f, 0.0f },   // bottom right
-			{ -1.0f, -1.0f, 0.0f,   0.0f, 0.0f },   // bottom left
-			{ -1.0f,  1.0f, 0.0f,   0.0f, 1.0f },   // top left 
-		};
 		glGenVertexArrays(1, &render.quad.vao);
-		GLuint vbo;
-		GLuint ebo;
-		glGenBuffers(1, &vbo);
-		glGenBuffers(1, &ebo);
-
-		glBindVertexArray(render.quad.vao);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-
-		glBindVertexArray(0);
-
-		glDeleteBuffers(1, &vbo);
-		glDeleteBuffers(1, &ebo);
+		load_tmp_quad(render.quad.vao);
 	}
 	return 1;
 err_all:
@@ -375,7 +375,7 @@ err_glad:
 	return 0;
 }
 
-void render_draw_quad(GLuint texture, Mat transform)
+void render_draw_quad(GLuint texture, Mat4x4 transform)
 {
 	glUseProgram(render.quad.prog);
 
@@ -390,7 +390,7 @@ void render_draw_quad(GLuint texture, Mat transform)
 			transform_name);
 		return;
 	}
-	glUniformMatrix4fv(location, 1, GL_FALSE, transform.v);
+	glUniformMatrix4fv(location, 1, GL_FALSE, transform.arr);
 
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glBindVertexArray(render.quad.vao);
@@ -454,13 +454,20 @@ void mb_append(MeshBuilder* mb, MeshVertex vertex)
 }
 void mesh_draw(const Mesh* mesh, GLuint texture, Camera cam, Perspective p)
 {
-	Mat ts = MAT_IDENTITY;
+	/*Mat ts = MAT_IDENTITY;
 	ts = mat_translate(ts, cam.pos);
 	ts = mat_look_at(ts, (Vec3){0}, cam.dir, cam.up);
-	ts = mat_perspective(ts, p.aspect, p.fov_z_rad, p.near, p.far);
+	ts = mat_perspective(ts, p.aspect, p.fov_z_rad, p.near, p.far);*/
+	Mat4x3 tmp = mat4x3_look_at(
+		cam.pos,
+		cam.dir,
+		cam.up
+	);
+	Mat4x4 ts = mat4x3_to_transform(tmp);
+	ts = mat4x4_mul(ts, mat4x4_persp(p.aspect, p.fov_z_rad, p.near, p.far));  // DO WE POST-MULTIPLY???????
 	mesh_draw_matrix(mesh, texture, ts);
 }
-void mesh_draw_matrix(const Mesh* mesh, GLuint texture, Mat transform)
+void mesh_draw_matrix(const Mesh* mesh, GLuint texture, Mat4x4 transform)
 {
 	GLuint prog = render_chunk_shader_program();
 	glUseProgram(prog);
@@ -476,7 +483,7 @@ void mesh_draw_matrix(const Mesh* mesh, GLuint texture, Mat transform)
 			transform_name);
 		return;
 	}
-	glUniformMatrix4fv(location, 1, GL_FALSE, transform.v);
+	glUniformMatrix4fv(location, 1, GL_FALSE, transform.arr);
 
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glBindVertexArray(mesh->vao);

@@ -51,57 +51,57 @@ static void add_chunk_face(
 	ASSERT(pos.y >= 0);
 	ASSERT(pos.z >= 0);
 
-	Vec3 v1;
-	Vec3 v2;
-	Vec3 v3;
-	Vec3 v4;
+	Vec3OpenGL v1;
+	Vec3OpenGL v2;
+	Vec3OpenGL v3;
+	Vec3OpenGL v4;
 
 	switch (face) {
 	case dir_nx:
-		v1 = (Vec3){0, 1, 1};
-		v2 = (Vec3){0, 0, 1};
-		v3 = (Vec3){1, 0, 1};
-		v4 = (Vec3){1, 1, 1};
+		v1 = vgl_new(0, 1, 1);
+		v2 = vgl_new(0, 0, 1);
+		v3 = vgl_new(1, 0, 1);
+		v4 = vgl_new(1, 1, 1);
 		break;
 	case dir_px:
-		v1 = (Vec3){1, 1, 0};
-		v2 = (Vec3){1, 0, 0};
-		v3 = (Vec3){0, 0, 0};
-		v4 = (Vec3){0, 1, 0};
+		v1 = vgl_new(1, 1, 0);
+		v2 = vgl_new(1, 0, 0);
+		v3 = vgl_new(0, 0, 0);
+		v4 = vgl_new(0, 1, 0);
 		break;
 	case dir_py:
-		v1 = (Vec3){1, 1, 1};
-		v2 = (Vec3){1, 0, 1};
-		v3 = (Vec3){1, 0, 0};
-		v4 = (Vec3){1, 1, 0};
+		v1 = vgl_new(1, 1, 1);
+		v2 = vgl_new(1, 0, 1);
+		v3 = vgl_new(1, 0, 0);
+		v4 = vgl_new(1, 1, 0);
 		break;
 	case dir_ny:
-		v1 = (Vec3){0, 1, 0};
-		v2 = (Vec3){0, 0, 0};
-		v3 = (Vec3){0, 0, 1};
-		v4 = (Vec3){0, 1, 1};
+		v1 = vgl_new(0, 1, 0);
+		v2 = vgl_new(0, 0, 0);
+		v3 = vgl_new(0, 0, 1);
+		v4 = vgl_new(0, 1, 1);
 		break;
 	case dir_pz:
-		v1 = (Vec3){0, 1, 0};
-		v2 = (Vec3){0, 1, 1};
-		v3 = (Vec3){1, 1, 1};
-		v4 = (Vec3){1, 1, 0};
+		v1 = vgl_new(0, 1, 0);
+		v2 = vgl_new(0, 1, 1);
+		v3 = vgl_new(1, 1, 1);
+		v4 = vgl_new(1, 1, 0);
 		break;
 	case dir_nz:
-		v1 = (Vec3){0, 0, 1};
-		v2 = (Vec3){0, 0, 0};
-		v3 = (Vec3){1, 0, 0};
-		v4 = (Vec3){1, 0, 1};
+		v1 = vgl_new(0, 0, 1);
+		v2 = vgl_new(0, 0, 0);
+		v3 = vgl_new(1, 0, 0);
+		v4 = vgl_new(1, 0, 1);
 		break;
 	default:
 		ASSERT(0); 
 	}
 
-	Vec3 vb = p2gl(bp2p(pos));
-	v1.x += vb.x; v1.y += vb.y; v1.z += vb.z;
-	v2.x += vb.x; v2.y += vb.y; v2.z += vb.z;
-	v3.x += vb.x; v3.y += vb.y; v3.z += vb.z;
-	v4.x += vb.x; v4.y += vb.y; v4.z += vb.z;
+	Vec3OpenGL vb = v3_opengl(bp2p(pos));
+	v1 = vgl_add(v1, vb);
+	v2 = vgl_add(v2, vb);
+	v3 = vgl_add(v3, vb);
+	v4 = vgl_add(v4, vb);
 
 	AtlasTexture texture = block_face_texture(block, face);
 	// TODO: get atlas coords form texture...
@@ -249,9 +249,9 @@ static CPos cp2lcp(CPos world, ChunkArea area)
 {
 	ASSERT(is_world_within_area(world, area));
 	return (CPos) {
-		mod(world.x - area.min.x + area.offset.x, (int)area.sidelen),
-		mod(world.y - area.min.y + area.offset.y, (int)area.sidelen),
-		mod(world.z - area.min.z + area.offset.z, (int)area.sidelen),
+		imodulo(world.x - area.min.x + area.offset.x, (int)area.sidelen),
+		imodulo(world.y - area.min.y + area.offset.y, (int)area.sidelen),
+		imodulo(world.z - area.min.z + area.offset.z, (int)area.sidelen),
 	};
 }
 
@@ -259,9 +259,9 @@ static CPos lcp2cp(CPos lpos, ChunkArea area)
 {
 	ASSERT(is_local_within_area(lpos, area));
 	return (CPos) {
-		area.min.x + mod(lpos.x - area.offset.x, (int)area.sidelen),
-		area.min.y + mod(lpos.y - area.offset.y, (int)area.sidelen),
-		area.min.z + mod(lpos.z - area.offset.z, (int)area.sidelen),
+		area.min.x + imodulo(lpos.x - area.offset.x, (int)area.sidelen),
+		area.min.y + imodulo(lpos.y - area.offset.y, (int)area.sidelen),
+		area.min.z + imodulo(lpos.z - area.offset.z, (int)area.sidelen),
 	};
 }
 
@@ -348,7 +348,7 @@ void chunks_draw(Chunks* chunks, Camera cam, Perspective p) {
 				CPos lpos = {x, y, z};
 				Chunk* chunk = &chunks->items[CHUNKS_CHUNK_IDX_V(lpos, sidelen)];
 				Camera c = cam;
-				c.pos = vadd(cam.pos, p2gl(bp2p(cp2bp(lcp2cp(lpos, chunks->area)))));
+				c.pos = v3_add(cam.pos, bp2p(cp2bp(lcp2cp(lpos, chunks->area))));
 				mesh_draw(&chunk->mesh, render_tmp_texture(), c, p);
 			}
 		}

@@ -1,6 +1,7 @@
 #pragma once
-#include "vmath.h"
 #include "glad.h"
+#include "context.h"
+#include "vmath.h"
 #include "image.h"
 
 typedef struct Perspective Perspective;
@@ -16,8 +17,8 @@ typedef struct Camera Camera;
 struct Camera
 {
 	Vec3 pos;
-	Vec3 dir;
-	Vec3 up;
+	Dir3 dir;
+	Dir3 up;
 };
 
 typedef struct Uv Uv;
@@ -30,7 +31,7 @@ PACK(struct Uv
 typedef struct MeshVertex MeshVertex;
 PACK(struct MeshVertex
 {
-	Vec3 pos;
+	Vec3OpenGL pos;
 	Uv uv;
 });
 
@@ -52,7 +53,7 @@ struct MeshBuilder
 GLuint load_pixel_texture(const Image *image);
 
 int render_init(void);
-void render_draw_quad(GLuint texture, Mat transform);
+void render_draw_quad(GLuint texture, Mat4x4 transform);
 GLuint render_tmp_texture(void);
 GLuint render_chunk_shader_program(void);
 
@@ -61,5 +62,5 @@ void mb_deinit(MeshBuilder* mb);
 Mesh mb_create(const MeshBuilder* mb);
 void mb_append(MeshBuilder* mb, MeshVertex vertex);
 void mesh_draw(const Mesh* mesh, GLuint texture, Camera cam, Perspective p);
-void mesh_draw_matrix(const Mesh* mesh, GLuint texture, Mat transform);
+void mesh_draw_matrix(const Mesh* mesh, GLuint texture, Mat4x4 transform);
 void mesh_deinit(Mesh* mesh);

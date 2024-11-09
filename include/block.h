@@ -15,16 +15,6 @@ struct BPos {
 	int z;
 };
 
-// Converts from the game's coordinate system to opengl coordinate system.
-static inline Vec3 p2gl(Vec3 pos)
-{
-	return (Vec3) {
-		.x = pos.y,
-		.y = pos.z,
-		.z = -pos.x,
-	};
-}
-
 static inline Vec3 bp2p(BPos pos) {
 	return (Vec3) {
 		.x = (float)pos.x,

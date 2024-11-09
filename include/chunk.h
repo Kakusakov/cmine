@@ -87,7 +87,7 @@ struct ChunkArea
 
 // A moveable area of chunks ment to be loaded and updated on the fly.
 typedef struct Chunks Chunks;
-struct Chunks 
+struct Chunks
 {
 	ChunkArea area;
 	Chunk *items;
