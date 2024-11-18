@@ -2,8 +2,8 @@
 #include "types.h"
 #include <GLFW/glfw3.h>
 
-typedef u8 MouseKey;
-enum
+typedef enum MouseKey MouseKey;
+enum MouseKey
 {
     mouse_key_left,
     mouse_key_right,
@@ -11,8 +11,8 @@ enum
     mouse_key_count
 };
 
-typedef u8 Key;
-enum
+typedef enum Key Key;
+enum Key
 {
     // Keybord buttons:
 
@@ -66,8 +66,8 @@ bool context_is_cursor_hidden(void);
 void context_hide_cursor(void);
 void context_show_cursor(void);
 bool context_is_window_focused(void);
-bool context_is_key_pressed(Key mouse_key);
-bool context_is_mouse_key_pressed(MouseKey key);
+bool context_is_key_pressed(Key key);
+bool context_is_mouse_key_pressed(MouseKey mouse_key);
 f64 conetxt_mouse_x(void);
 f64 conetxt_mouse_y(void);
 f64 context_time(void);

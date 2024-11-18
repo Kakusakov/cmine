@@ -18,7 +18,7 @@ static inline Dir3 dir3_from_vec(Vec3 dir) {
 	return result;
 }
 static inline Vec3 dir3_as_unit_vec(Dir3 dir) {
-	return v3_new(dir.x, dir.y, dir.z);
+	return (Vec3){dir.x, dir.y, dir.z};
 }
 static inline Vec3 dir3_with_magnitude(Dir3 dir, f32 mag) {
 	return v3_scale(dir3_as_unit_vec(dir), mag);
@@ -39,7 +39,7 @@ static inline Dir2 dir2_from_vec(Vec2 dir) {
 	return result;
 }
 static inline Vec2 dir2_as_unit_vec(Dir2 dir) {
-	return v2_new(dir.x, dir.y);
+	return (Vec2){dir.x, dir.y};
 }
 static inline Vec2 dir2_with_magnitude(Dir2 dir, f32 mag) {
 	return v2_scale(dir2_as_unit_vec(dir), mag);

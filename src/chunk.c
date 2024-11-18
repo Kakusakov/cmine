@@ -58,50 +58,50 @@ static void add_chunk_face(
 
 	switch (face) {
 	case dir_nx:
-		v1 = vgl_new(0, 1, 1);
-		v2 = vgl_new(0, 0, 1);
-		v3 = vgl_new(1, 0, 1);
-		v4 = vgl_new(1, 1, 1);
+		v1 = (Vec3OpenGL){0, 1, 1};
+		v2 = (Vec3OpenGL){0, 0, 1};
+		v3 = (Vec3OpenGL){1, 0, 1};
+		v4 = (Vec3OpenGL){1, 1, 1};
 		break;
 	case dir_px:
-		v1 = vgl_new(1, 1, 0);
-		v2 = vgl_new(1, 0, 0);
-		v3 = vgl_new(0, 0, 0);
-		v4 = vgl_new(0, 1, 0);
+		v1 = (Vec3OpenGL){1, 1, 0};
+		v2 = (Vec3OpenGL){1, 0, 0};
+		v3 = (Vec3OpenGL){0, 0, 0};
+		v4 = (Vec3OpenGL){0, 1, 0};
 		break;
 	case dir_py:
-		v1 = vgl_new(1, 1, 1);
-		v2 = vgl_new(1, 0, 1);
-		v3 = vgl_new(1, 0, 0);
-		v4 = vgl_new(1, 1, 0);
+		v1 = (Vec3OpenGL){1, 1, 1};
+		v2 = (Vec3OpenGL){1, 0, 1};
+		v3 = (Vec3OpenGL){1, 0, 0};
+		v4 = (Vec3OpenGL){1, 1, 0};
 		break;
 	case dir_ny:
-		v1 = vgl_new(0, 1, 0);
-		v2 = vgl_new(0, 0, 0);
-		v3 = vgl_new(0, 0, 1);
-		v4 = vgl_new(0, 1, 1);
+		v1 = (Vec3OpenGL){0, 1, 0};
+		v2 = (Vec3OpenGL){0, 0, 0};
+		v3 = (Vec3OpenGL){0, 0, 1};
+		v4 = (Vec3OpenGL){0, 1, 1};
 		break;
 	case dir_pz:
-		v1 = vgl_new(0, 1, 0);
-		v2 = vgl_new(0, 1, 1);
-		v3 = vgl_new(1, 1, 1);
-		v4 = vgl_new(1, 1, 0);
+		v1 = (Vec3OpenGL){0, 1, 0};
+		v2 = (Vec3OpenGL){0, 1, 1};
+		v3 = (Vec3OpenGL){1, 1, 1};
+		v4 = (Vec3OpenGL){1, 1, 0};
 		break;
 	case dir_nz:
-		v1 = vgl_new(0, 0, 1);
-		v2 = vgl_new(0, 0, 0);
-		v3 = vgl_new(1, 0, 0);
-		v4 = vgl_new(1, 0, 1);
+		v1 = (Vec3OpenGL){0, 0, 1};
+		v2 = (Vec3OpenGL){0, 0, 0};
+		v3 = (Vec3OpenGL){1, 0, 0};
+		v4 = (Vec3OpenGL){1, 0, 1};
 		break;
 	default:
 		ASSERT(0); 
 	}
 
-	Vec3OpenGL vb = v3_opengl(bp2p(pos));
-	v1 = vgl_add(v1, vb);
-	v2 = vgl_add(v2, vb);
-	v3 = vgl_add(v3, vb);
-	v4 = vgl_add(v4, vb);
+	Vec3OpenGL vb = v3_to_opengl(bp2p(pos));
+	v1 = v3gl_add(v1, vb);
+	v2 = v3gl_add(v2, vb);
+	v3 = v3gl_add(v3, vb);
+	v4 = v3gl_add(v4, vb);
 
 	AtlasTexture texture = block_face_texture(block, face);
 	// TODO: get atlas coords form texture...

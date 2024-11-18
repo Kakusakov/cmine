@@ -61,7 +61,7 @@ void world_run(void) {
 	GLuint texture = render_tmp_texture();
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-	Vec3 pos = v3_new(1, 0, -1.5);
+	Vec3 pos = (Vec3){1, 0, -1.5};
 
 	f32 mouse_speed = 0.001f;
 	f32 move_speed = 3.0f;
@@ -90,8 +90,8 @@ void world_run(void) {
 			seed++;
 		}
 
-		Vec3 up = v3_new(0, 0, 1);
-		Vec3 dir = v3_new(-angle_cos(h_ang), -angle_sin(h_ang), 0);
+		Vec3 up = (Vec3){0, 0, 1};
+		Vec3 dir = (Vec3){-angle_cos(h_ang), -angle_sin(h_ang), 0};
 		Vec3 left = v3_cross(dir, up);
 		
 		f32 move = move_speed * (f32)delta_time();
@@ -104,7 +104,7 @@ void world_run(void) {
 		if (is_key_down(key_g)) should_generate_chunk = true;
 
 		if (!context_is_window_focused() || is_key_down(key_esc)) context_show_cursor();
-		if (context_is_cursor_hovered() && is_key_down(mouse_key_left)) context_hide_cursor();
+		if (context_is_cursor_hovered() && is_mouse_down(mouse_key_left)) context_hide_cursor();
 		if (context_is_cursor_hidden()) {
 			h_ang = angle_normal(angle_add(h_ang, angle_from_radians((f32)mouse_dx()*mouse_speed)));
 			v_ang = angle_clamp(
@@ -125,7 +125,7 @@ void world_run(void) {
 		f32 cos = angle_cos(v_ang);
 		Camera cam = {
 			.pos = pos, 
-			.dir = dir3_from_vec(v3_new(dir.x*cos, dir.y*cos, -sin)),
+			.dir = dir3_from_vec((Vec3){dir.x*cos, dir.y*cos, -sin}),
 			.up = dir3_from_vec(up),
 		};
 		Perspective p = {

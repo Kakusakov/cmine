@@ -6,7 +6,7 @@ typedef Vec4 Quat;
 static inline Quat quat_from_axis_angle(Dir3 axis, Angle angle) {
 	Angle halfang = angle_scale(angle, 0.5f);
 	Vec3 v = dir3_with_magnitude(axis, angle_sin(halfang));
-	return v4_new(v.x, v.y, v.z, angle_cos(halfang));
+	return (Vec4){v.x, v.y, v.z, angle_cos(halfang)};
 }
 static inline Quat quat_from_eulers(Angle xang, Angle yang, Angle zang) {
 	// zyx rotation order
@@ -19,15 +19,15 @@ static inline Quat quat_from_eulers(Angle xang, Angle yang, Angle zang) {
 	f32 cy = angle_cos(yhalfang);
 	f32 sz = angle_sin(zhalfang);
 	f32 cz = angle_cos(zhalfang);
-	return v4_new(
+	return (Vec4) {
 		sx*cy*cz - cx*sy*sz,
 		cx*sy*cz + sx*cy*sz,
 		cx*cy*sz - sx*sy*cz,
 		cx*cy*cz + sx*sy*sz
-	);
+	};
 }
 static inline Quat quat_conj(Quat q) {
-	return v4_new(-q.x, -q.y, -q.z, q.w);
+	return (Vec4){-q.x, -q.y, -q.z, q.w};
 }
 static inline Quat quat_mul(Quat a, Quat b) {
 	Vec3 a_ax = v4_xyz(a);
@@ -40,7 +40,7 @@ static inline Quat quat_mul(Quat a, Quat b) {
 		v3_cross(a_ax, b_ax)
 	);
 	f32 w = a.w*b.w - v3_dot(a_ax, b_ax);
-	return v4_new(v.x, v.y, v.z, w);
+	return (Vec4){v.x, v.y, v.z, w};
 }
 static inline Vec3 quat_apply(Quat q, Vec3 v) {
 	Quat qv = v3_extend(v, 0);

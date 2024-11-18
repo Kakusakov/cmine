@@ -48,7 +48,7 @@ static inline Mat3x3 mat3x3_from_cols(
 	return result;
 }
 static inline Mat3x3 mat3x3_from_scale(Vec3 v) {
-	Vec3OpenGL t = v3_opengl(v);
+	Vec3OpenGL t = v3_to_opengl(v);
 	Mat3x3 result = {
 		t.x, 0, 0,
 		0, t.y, 0,
@@ -101,15 +101,15 @@ static inline Mat4x3 mat4x3_look_at(
 	Dir3 dir,
 	Dir3 up)
 {
-	Vec3OpenGL ax_z = v3_opengl(dir3_as_unit_vec(dir));
-	Vec3OpenGL ax_x = vgl_normal(vgl_cross(v3_opengl(dir3_as_unit_vec(up)), ax_z));
-	Vec3OpenGL ax_y = vgl_cross(ax_z, ax_x);
+	Vec3OpenGL ax_z = v3_to_opengl(dir3_as_unit_vec(dir));
+	Vec3OpenGL ax_x = v3gl_normal(v3gl_cross(v3_to_opengl(dir3_as_unit_vec(up)), ax_z));
+	Vec3OpenGL ax_y = v3gl_cross(ax_z, ax_x);
 
-	Vec3OpenGL position = vgl_new(
-		vgl_dot(ax_x, v3_opengl(from)),
-		vgl_dot(ax_y, v3_opengl(from)),
-		vgl_dot(ax_z, v3_opengl(from))
-	);
+	Vec3OpenGL position = {
+		v3gl_dot(ax_x, v3_to_opengl(from)),
+		v3gl_dot(ax_y, v3_to_opengl(from)),
+		v3gl_dot(ax_z, v3_to_opengl(from))
+	};
 	Mat3x3 rotscale = mat3x3_from_cols(
 		ax_x,
 		ax_y,
@@ -139,16 +139,16 @@ static inline Mat4x4 mat4x4_ortho(
 	f32 bottom, f32 top,
 	f32 near,   f32 far
 ) {
-	Vec3 p = v3_new(
+	Vec3 p = {
 		-(left + right)/(left - right),
 		-(bottom + top)/(bottom - top),
 		-(far + near)/(far - near)
-	);
-	Vec3 s = v3_new(
+	};
+	Vec3 s = {
 		2/(left - right),
 		2/(bottom - top),
 		-2/(far - near)
-	);
+	};
 	Mat4x4 result = {
 		s.x, 0,   0,   0,
 		0,   s.y, 0,   0,
@@ -162,11 +162,11 @@ static inline Mat4x4 mat4x4_persp(
 	f32 near,   f32 far
 ) {
 	f32 f = 1/tanf(fovz/2);
-	Vec3 s = v3_new(
+	Vec3 s = {
 		f / aspect,
 		f,
 		(far + near)/(near - far)
-	);
+	};
 	f32 z = (2*far*near)/(near - far);
 	Mat4x4 result = {
 		s.x, 0,   0,    0,
