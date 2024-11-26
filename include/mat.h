@@ -5,15 +5,15 @@ typedef struct Mat4x4 Mat4x4;
 struct Mat4x4 {
 	f32 arr[4*4];
 };
+
 static inline Mat4x4 mat4x4_mul(Mat4x4 a, Mat4x4 b) {
 	Mat4x4 result;
 	for (size_t y = 0; y < 4; y++) {
 		for (size_t x = 0; x < 4; x++) {
-			result.arr[y*4 + x] =
-				a.arr[4*y + 0]*b.arr[4*0 + x] +
-				a.arr[4*y + 1]*b.arr[4*1 + x] +
-				a.arr[4*y + 2]*b.arr[4*2 + x] +
-				a.arr[4*y + 3]*b.arr[4*3 + x];
+			result.arr[4*y + x] = 0;
+			for (size_t i = 0; i < 4; i++) {
+				result.arr[4*y + x] += a.arr[4*y + i] * b.arr[4*i + x];
+			}
 		}
 	}
 	return result;
@@ -138,7 +138,20 @@ static inline Mat4x4 mat4x4_ortho(
 	f32 left,   f32 right,
 	f32 bottom, f32 top,
 	f32 near,   f32 far
+	// f32 x0, f32 dx,
+	// f32 y0, f32 dy,
+	// f32 z0, f32 dz
 ) {
+	// Vec3 p = {
+	//     x0/dx,
+	//     y0/dy,
+	//     z0/dz,
+	// };
+	// Vec3 s = {
+	//     1/dx,
+	//     1/dy,
+	//     1/dz,
+	// };
 	Vec3 p = {
 		-(left + right)/(left - right),
 		-(bottom + top)/(bottom - top),
@@ -163,7 +176,7 @@ static inline Mat4x4 mat4x4_persp(
 ) {
 	f32 f = 1/tanf(fovz/2);
 	Vec3 s = {
-		f / aspect,
+		f/aspect,
 		f,
 		(far + near)/(near - far)
 	};

@@ -4,64 +4,51 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define VEC_UNION(VEC)\
-VEC##Union
-
 #define GENERATE_VEC(T, S, VEC, BODY)\
-typedef struct VEC VEC;\
-struct VEC {\
-	BODY\
-};\
-typedef union VEC_UNION(VEC) VEC_UNION(VEC);\
-union VEC_UNION(VEC) {\
-	VEC as_vec;\
-	T as_arr[S];\
+typedef union VEC VEC;\
+union VEC {\
+	struct {\
+		BODY\
+	};\
+	T values[S];\
 };\
 
 #define GENERATE_VEC_FNS(T, S, VEC, PREFIX)\
 static inline VEC PREFIX##splat(T value) {\
-	VEC_UNION(VEC) ur = {0};\
+	VEC result = {0};\
 	for (size_t i = 0; i < S; i++) {\
-		ur.as_arr[i] = value;\
+		result.values[i] = value;\
 	}\
-	return ur.as_vec;\
+	return result;\
 }\
 static inline VEC PREFIX##add(VEC a, VEC b) {\
-	VEC_UNION(VEC) ua = {a};\
-	VEC_UNION(VEC) ub = {b};\
-	VEC_UNION(VEC) ur = {0};\
+	VEC result = {0};\
 	for (size_t i = 0; i < S; i++) {\
-		ur.as_arr[i] = ua.as_arr[i] + ub.as_arr[i];\
+		result.values[i] = a.values[i] + b.values[i];\
 	}\
-	return ur.as_vec;\
+	return result;\
 }\
 static inline VEC PREFIX##sub(VEC a, VEC b) {\
-	VEC_UNION(VEC) ua = {a};\
-	VEC_UNION(VEC) ub = {b};\
-	VEC_UNION(VEC) ur = {0};\
+	VEC result = {0};\
 	for (size_t i = 0; i < S; i++) {\
-		ur.as_arr[i] = ua.as_arr[i] - ub.as_arr[i];\
+		result.values[i] = a.values[i] - b.values[i];\
 	}\
-	return ur.as_vec;\
+	return result;\
 }\
 static inline VEC PREFIX##mul(VEC a, VEC b) {\
-	VEC_UNION(VEC) ua = {a};\
-	VEC_UNION(VEC) ub = {b};\
-	VEC_UNION(VEC) ur = {0};\
+	VEC result = {0};\
 	for (size_t i = 0; i < S; i++) {\
-		ur.as_arr[i] = ua.as_arr[i] * ub.as_arr[i];\
+		result.values[i] = a.values[i] * b.values[i];\
 	}\
-	return ur.as_vec;\
+	return result;\
 }\
 static inline VEC PREFIX##div(VEC a, VEC b) {\
-	VEC_UNION(VEC) ua = {a};\
-	VEC_UNION(VEC) ub = {b};\
-	VEC_UNION(VEC) ur = {0};\
+	VEC result = {0};\
 	for (size_t i = 0; i < S; i++) {\
-		if (ub.as_arr[i] == 0) abort();\
-		ur.as_arr[i] = ua.as_arr[i] / ub.as_arr[i];\
+		if (b.values[i] == 0) abort();\
+		result.values[i] = a.values[i] / b.values[i];\
 	}\
-	return ur.as_vec;\
+	return result;\
 }\
 static inline VEC PREFIX##neg(VEC a) {\
 	return PREFIX##sub(PREFIX##splat(0), a);\
@@ -69,14 +56,12 @@ static inline VEC PREFIX##neg(VEC a) {\
 
 #define GENERATE_IVEC_FNS(T, S, VEC, PREFIX)\
 static inline VEC PREFIX##mod(VEC a, VEC b) {\
-	VEC_UNION(VEC) ua = {a};\
-	VEC_UNION(VEC) ub = {b};\
-	VEC_UNION(VEC) ur = {0};\
+	VEC result = {0};\
 	for (size_t i = 0; i < S; i++) {\
-		if (ub.as_arr[i] == 0) abort();\
-		ua.as_arr[i] = (ua.as_arr[i] % ub.as_arr[i] + ub.as_arr[i]) % ub.as_arr[i];\
+		if (b.values[i] == 0) abort();\
+		a.values[i] = (a.values[i] % b.values[i] + b.values[i]) % b.values[i];\
 	}\
-	return ur.as_vec;\
+	return result;\
 }\
 
 #define GENERATE_FVEC_FNS(T, S, VEC, PREFIX, SQRT_FN)\
@@ -84,11 +69,9 @@ static inline VEC PREFIX##scale(VEC a, T value) {\
 	return PREFIX##mul(PREFIX##splat(value), a);\
 }\
 static inline T PREFIX##dot(VEC a, VEC b) {\
-	VEC_UNION(VEC) ua = {a};\
-	VEC_UNION(VEC) ub = {b};\
 	T result = 0;\
 	for (size_t i = 0; i < S; i++) {\
-		result += ua.as_arr[i] * ub.as_arr[i];\
+		result += a.values[i] * b.values[i];\
 	}\
 	return result;\
 }\
